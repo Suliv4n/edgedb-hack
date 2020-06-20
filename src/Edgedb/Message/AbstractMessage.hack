@@ -2,12 +2,13 @@ namespace Edgedb\Message;
 
 use namespace HH\Lib\Str;
 
+use type Edgedb\Message\Buffer;
 use type Edgedb\Message\Type\AbstractType;
 use type Edgedb\Message\Type\Struct\AbstractStruct;
 use type Edgedb\Message\Type\Int32Type;
 use type Edgedb\Message\Type\CharType;
 
-abstract class AbstractMessage<T as AbstractStruct> extends AbstractType<T>
+abstract class AbstractMessage<+T as AbstractStruct> extends AbstractType<T>
 {
     protected dict<string, mixed> $struct = dict[];
 
@@ -25,7 +26,6 @@ abstract class AbstractMessage<T as AbstractStruct> extends AbstractType<T>
 
     public function getLength(): int
     {
-        // Adding 4 for message type representing by 4 bytes characters.
         return $this->content->getLength() + 4;
     }
 
@@ -35,9 +35,14 @@ abstract class AbstractMessage<T as AbstractStruct> extends AbstractType<T>
         $length = $this->getLength();
 
         $buffer = (new CharType($this->type))->write()
-            . (new Int32Type($length + 4))->write()
+            . (new Int32Type($length))->write()
             . $buffer;
 
         return $buffer;
+    }
+
+    protected static function setBufferCursorAtContentBegining(Buffer $buffer): void
+    {
+        $buffer->setCursor(5);
     }
 }

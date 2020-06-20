@@ -7,7 +7,7 @@ use type Edgedb\Message\Type\Struct\ClientHandshakeStruct;
 class ClientHandshakeMessage extends AbstractMessage<ClientHandshakeStruct>
 {
     public function __construct(ClientHandshakeStruct $content) {
-        parent::__construct("V", $content);
+        parent::__construct('V', $content);
     }
 }
 

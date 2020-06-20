@@ -24,7 +24,7 @@ class Message
 
         if ($payloadLength != $expectedMessageLength - 4) {
             throw new BufferException(
-                "Length message is {$expectedMessageLength} bytes but {$payloadLength} bytes found."
+                'Length message is {$expectedMessageLength} bytes but {$payloadLength} bytes found.'
             );
         }
 

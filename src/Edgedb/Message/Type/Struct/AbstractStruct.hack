@@ -6,7 +6,7 @@ abstract class AbstractStruct extends AbstractType<darray<string, AbstractType<m
 {
     public function write(): string
     {
-        $buffer = "";
+        $buffer = '';
         foreach ($this->getValue() as $name => $type) {
             $buffer .= $type->write();
         }

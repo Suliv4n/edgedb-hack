@@ -14,8 +14,8 @@ class ProtocolExtStruct extends AbstractStruct implements Readable
         vec<HeaderStruct> $headers
     ) {
         parent::__construct(darray[
-            "extension_name" => new StringType($name),
-            "headers" => new VectorType<HeaderStruct>($headers)
+            'extension_name' => new StringType($name),
+            'headers' => new VectorType<HeaderStruct>($headers)
         ]);
     }
 

@@ -3,7 +3,7 @@ namespace Edgedb\Message\Type;
 use Edgedb\Message\Buffer;
 use type Edgedb\Message\Readable;
 
-class Int32Type extends AbstractType<int> implements Readable
+class Int32Type extends AbstractType<int>
 {
     public function write(): string
     {
@@ -18,7 +18,9 @@ class Int32Type extends AbstractType<int> implements Readable
 
     public static function read(Buffer $buffer): Int32Type
     {
-        $value = $buffer->read(4) |> \unpack('N', $$);
+        $value = $buffer->read(4) 
+            |> \unpack('N', $$)[1];
+
         return new Int32Type($value);
     }
 }

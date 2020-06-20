@@ -10,8 +10,8 @@ class ParamStruct extends AbstractStruct
         string $value
     ) {
         parent::__construct(darray[
-            "parameter_name" => new StringType($name),
-            "parameter_value" => new StringType($value)
+            'parameter_name' => new StringType($name),
+            'parameter_value' => new StringType($value)
         ]);
     }
 }

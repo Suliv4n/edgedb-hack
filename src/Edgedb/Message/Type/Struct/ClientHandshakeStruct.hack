@@ -14,10 +14,10 @@ class ClientHandshakeStruct extends AbstractStruct
         vec<ProtocolExtStruct> $extensions
     ){
         parent::__construct(darray[
-            "major_version" => new Int16Type($version->getMajorversion()),
-            "minor_version" => new Int16Type($version->getMinorVersion()),
-            "parameters" => new VectorType($parameters),
-            "protocol_extensions" => new VectorType($extensions)
+            'major_version' => new Int16Type($version->getMajorversion()),
+            'minor_version' => new Int16Type($version->getMinorVersion()),
+            'parameters' => new VectorType($parameters),
+            'protocol_extensions' => new VectorType($extensions)
         ]);
     }
 }

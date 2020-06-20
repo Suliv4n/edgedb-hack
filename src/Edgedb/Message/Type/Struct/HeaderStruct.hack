@@ -10,8 +10,8 @@ class HeaderStruct extends AbstractStruct implements Readable
     public function __construct(int $key, string $value)
     {
         parent::__construct(darray[
-            "key" => new Int16Type($key),
-            "value" => new BytesType($value)
+            'key' => new Int16Type($key),
+            'value' => new BytesType($value)
         ]);
     }
 

@@ -10,10 +10,16 @@ class Buffer
         private string $bytes
     ) {}
 
-    public function read(int $length): string {
+    public function read(int $length): string 
+    {
         $extract = Str\slice($this->bytes, $this->cursor, $length);
         $this->cursor += $length;
 
         return $extract;
+    }
+
+    public function setCursor(int $cursor): void
+    {
+        $this->cursor = $cursor;
     }
 }

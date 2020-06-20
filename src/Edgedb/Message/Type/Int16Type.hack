@@ -18,7 +18,9 @@ class Int16Type extends AbstractType<int> implements Readable
 
     public static function read(Buffer $buffer): Int16Type
     {
-        $value = $buffer->read(2) |> \unpack('n', $$);
-        return new Int16Type($value);
+        $value = $buffer->read(2)
+            |> \unpack('n', $$)[1];
+
+        return new self($value);
     }
 }

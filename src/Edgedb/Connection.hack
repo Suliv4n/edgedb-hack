@@ -8,10 +8,14 @@ use type Edgedb\Message\Type\Struct\ClientHandshakeStruct;
 use type Edgedb\Message\Type\Struct\ParamStruct;
 use type Edgedb\Message\Client\ClientHandshakeMessage;
 use type Edgedb\Message\Server\ServerHandshakeMessage;
+use type Edgedb\Message\Server\AuthenticationRequiredSASLMessage;
 use type Edgedb\Message\Buffer;
+use type Edgedb\UnsupportedVersionException;
 
 use namespace HH\Lib\Str;
 use namespace HH\Lib\Vec;
+
+use function HH\invariant;
 
 class Connection
 {
@@ -50,30 +54,45 @@ class Connection
 
     private function handshake(): void 
     {
-        $version = new Version(1, 0);
+        $reader = new Reader();
 
-        
+        $clientVersion = new Version(0, 7);
         $handshakeMessage = new ClientHandshakeMessage(
             new ClientHandshakeStruct(
-                new Version(1, 0),
+                $clientVersion,
                 vec[
-                    new ParamStruct("user", $this->username),
-                    new ParamStruct("database", $this->database),
+                    new ParamStruct('user', $this->username),
+                    new ParamStruct('database', $this->database),
                 ],
                 vec[]
             )
         );
 
         $handshake = $handshakeMessage->write();
-
         $this->send($handshake);
 
         $bytes = '';
         \socket_recv($this->socket, inout $bytes, 2048, 0);
         $buffer = new Buffer($bytes);
 
-        $serverResponse = ServerHandshakeMessage::read($buffer);
-        \var_dump($serverResponse);
+        $response = $reader->read($buffer);
+
+        $responseType = $response->getType();
+
+        if ($responseType === 'R') {
+            invariant(
+                $response is AuthenticationRequiredSASLMessage,
+                'Type R message should be a %s.',
+                AuthenticationRequiredSASLMessage::class
+            );
+        }
+
+        /*
+        if (!$clientVersion->supports($serverVersion))
+        {
+            throw new UnsupportedVersionException($clientVersion, $serverVersion);
+        }
+        */
 
         \socket_close($this->socket);
     }

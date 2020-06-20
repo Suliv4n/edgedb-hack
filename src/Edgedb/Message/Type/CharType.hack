@@ -21,8 +21,8 @@ class CharType extends AbstractType<string> implements Readable
     public static function read(Buffer $buffer): CharType
     {
         $value = $buffer->read(1)
-            |> \unpack('C', $$);
+            |> \unpack('C', $$)[1];
 
-        return new CharType($value);
+        return new CharType(\chr($value));
     }
 }

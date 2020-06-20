@@ -16,15 +16,20 @@ class ServerHandshakeStruct extends AbstractStruct implements Readable
         private vec<ProtocolExtStruct> $extensions
     ){
         parent::__construct(darray[
-            "major_version" => new Int16Type($version->getMajorversion()),
-            "minor_version" => new Int16Type($version->getMinorVersion()),
-            "protocol_extensions" => new VectorType($extensions)
+            'major_version' => new Int16Type($version->getMajorversion()),
+            'minor_version' => new Int16Type($version->getMinorVersion()),
+            'protocol_extensions' => new VectorType($extensions)
         ]);
     }
 
-    private function getVersion(): Version
+    public function getVersion(): Version
     {
         return $this->version;
+    }
+
+    public function getExtensions(): vec<ProtocolExtStruct>
+    {
+        return $this->extensions;
     }
 
     public static function read(Buffer $buffer): ServerHandshakeStruct

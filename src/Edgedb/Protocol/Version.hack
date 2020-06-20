@@ -16,4 +16,18 @@ class Version
     {
         return $this->minorVersion;
     }
+
+    public function supports(Version $version): bool
+    {
+        return $version->majorVersion === $this->majorVersion
+            && (
+                $version->majorVersion !== 0 
+                || $version->minorVersion  === $this->minorVersion
+            );
+    }
+
+    public function __toString(): string
+    {
+        return $this->majorVersion . '.' . $this->minorVersion;
+    }
 }
