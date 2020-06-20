@@ -19,4 +19,14 @@ abstract class AbstractStruct extends AbstractType<darray<string, AbstractType<m
         $value = $this->getValue();
         $value[$name] = $newValue;
     }
+
+    public function getLength(): int
+    {
+        $length = 0;
+        foreach ($this->getValue() as $element) {
+            $length += $element->getLength();
+        }
+
+        return $length;
+    }
 }

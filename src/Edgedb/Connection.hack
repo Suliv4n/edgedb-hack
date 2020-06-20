@@ -1,6 +1,14 @@
 namespace Edgedb;
 
 use type Edgedb\Buffer\WriteBuffer;
+use type Edgedb\Buffer\Message;
+use type Edgedb\Message\Reader;
+use type Edgedb\Protocol\Version;
+use type Edgedb\Message\Type\Struct\ClientHandshakeStruct;
+use type Edgedb\Message\Type\Struct\ParamStruct;
+use type Edgedb\Message\Client\ClientHandshakeMessage;
+use type Edgedb\Message\Server\ServerHandshakeMessage;
+use type Edgedb\Message\Buffer;
 
 use namespace HH\Lib\Str;
 use namespace HH\Lib\Vec;
@@ -42,34 +50,35 @@ class Connection
 
     private function handshake(): void 
     {
-        echo "Handshake edgedb\n";
+        $version = new Version(1, 0);
 
-        $buffer = new WriteBuffer();
+        
+        $handshakeMessage = new ClientHandshakeMessage(
+            new ClientHandshakeStruct(
+                new Version(1, 0),
+                vec[
+                    new ParamStruct("user", $this->username),
+                    new ParamStruct("database", $this->database),
+                ],
+                vec[]
+            )
+        );
 
-        $buffer
-            ->beginMessage('V') //Message type
-            ->writeInt16BE(1) //Protocol major version
-            ->writeInt16BE(0) //Protocol minor version
-            ->writeInt16BE(2) //Number of parameters
-            ->writeString('user')
-            ->writeString($this->username)
-            ->writeString('database')
-            ->writeString($this->database)
-            ->writeInt16BE(0) //Number of protocol extensions 
-            ->endMessage();
+        $handshake = $handshakeMessage->write();
 
-        $handshake = $buffer->getBuffer();
         $this->send($handshake);
 
-        $buff = '';
-        \socket_recv($this->socket, inout $buff, 2048, 0);
-        \var_dump($buff);
+        $bytes = '';
+        \socket_recv($this->socket, inout $bytes, 2048, 0);
+        $buffer = new Buffer($bytes);
+
+        $serverResponse = ServerHandshakeMessage::read($buffer);
+        \var_dump($serverResponse);
+
+        \socket_close($this->socket);
     }
 
     private function send(string $bytes): void {
-        echo "Send to server :\n";
-        \var_dump($bytes);
-        \var_dump(Vec\map(Str\split($bytes, ''), $byte ==> \ord($byte)) );
         \socket_send($this->socket, $bytes, \strlen($bytes), 0);
     }
 }

@@ -1,6 +1,5 @@
 namespace Edgedb\Message\Type;
 
-
 abstract class AbstractType<+T>
 {
     public function __construct(
@@ -12,6 +11,7 @@ abstract class AbstractType<+T>
         return $this->value;
     }
 
-
     abstract public function write(): string;
+
+    abstract public function getLength(): int;
 }

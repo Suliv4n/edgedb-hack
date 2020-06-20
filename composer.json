@@ -1,6 +1,6 @@
 {
     "require": {
-        "hhvm/hsl": "^4.25",
-        "hhvm/hhvm-autoload": "^2.0"
+        "hhvm/hsl": "^4.40",
+        "hhvm/hhvm-autoload": "^3.1"
     }
 }
