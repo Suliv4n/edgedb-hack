@@ -1,4 +1,4 @@
-namespace Edgedb;
+namespace Edgedb\Exception;
 
 use type Exception;
 use type Edgedb\Protocol\Version;

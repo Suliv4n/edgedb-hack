@@ -13,17 +13,18 @@ class Reader
         $messageType = $this->readMessageType($buffer);
 
         switch ($messageType) {
-            case 'v':
+            case MessageTypeEnum::SERVER_HANDSHAKE:
                 return ServerHandshakeMessage::read($buffer);
-            case 'R':
+            case MessageTypeEnum::AUTHENTICATION_REQUIRED_SASL:
                 return AuthenticationRequiredSASLMessage::read($buffer);
             default:
                 throw new \Exception('Unknown message type ' . $messageType . '.');
         }
     }
 
-    private function readMessageType(Buffer $buffer): string
+    private function readMessageType(Buffer $buffer): MessageTypeEnum
     {
-        return CharType::read($buffer)->getValue();
+        return CharType::read($buffer)->getValue()
+            |> MessageTypeEnum::assert($$);
     }
 }

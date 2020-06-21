@@ -5,11 +5,12 @@ use type Edgedb\Message\Readable;
 use type Edgedb\Message\Type\Int32Type;
 use type Edgedb\Message\Type\VectorType;
 use type Edgedb\Message\Type\StringType;
+use type Edgedb\Authentication\AuthenticationStatusEnum;
 
 class AuthenticationRequiredSASLStruct extends AbstractStruct implements Readable
 {
         public function __construct(
-            private int $authenticationStatus,
+            private AuthenticationStatusEnum $authenticationStatus,
             private vec<string> $methods
         ) {
             parent::__construct(darray[
@@ -30,7 +31,9 @@ class AuthenticationRequiredSASLStruct extends AbstractStruct implements Readabl
 
         public static function read(Buffer $buffer): AuthenticationRequiredSASLStruct
         {
-            $authenticationStatus = Int32Type::read($buffer)->getValue();
+            $authenticationStatus = Int32Type::read($buffer)->getValue()
+                |> AuthenticationStatusEnum::assert($$);
+
             $methodsCount = Int32Type::read($buffer)->getValue();
 
             $methods = vec[];

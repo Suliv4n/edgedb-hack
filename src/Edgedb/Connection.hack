@@ -1,5 +1,6 @@
 namespace Edgedb;
 
+use type Edgedb\Authentication\AuthenticatorFactory;
 use type Edgedb\Buffer\WriteBuffer;
 use type Edgedb\Buffer\Message;
 use type Edgedb\Message\Reader;
@@ -10,7 +11,7 @@ use type Edgedb\Message\Client\ClientHandshakeMessage;
 use type Edgedb\Message\Server\ServerHandshakeMessage;
 use type Edgedb\Message\Server\AuthenticationRequiredSASLMessage;
 use type Edgedb\Message\Buffer;
-use type Edgedb\UnsupportedVersionException;
+use type Edgedb\Message\MessageTypeEnum;
 
 use namespace HH\Lib\Str;
 use namespace HH\Lib\Vec;
@@ -19,36 +20,21 @@ use function HH\invariant;
 
 class Connection
 {
-    <<__LateInit>>
-    private resource $socket;
+    private Socket $socket;
 
     public function __construct(
-        private string $host,
-        private int $port,
+        string $host,
+        int $port,
         private string $database,
         private string $username,
         private ?string $password = null
     )
-    {}
+    {
+        $this->socket = new Socket($host, $port);
+    }
 
     public function connect(): void 
-    {
-        $socketAddress = Str\format('%s:%d', $this->host, $this->port);
-        $errorNumber = 0;
-        $errorString = '';
-        $this->socket = \stream_socket_client($socketAddress, inout $errorNumber, inout $errorString);
-
-        if ($errorNumber !== 0)
-        {
-            throw new ConnectionException(
-                Str\format(
-                    'Fail to connect to edgedb server at %s : %s',
-                    $socketAddress,
-                    $errorString
-                )
-            );
-        }
-        
+    {   
         $this->handshake();
     }
 
@@ -57,7 +43,7 @@ class Connection
         $reader = new Reader();
 
         $clientVersion = new Version(0, 7);
-        $handshakeMessage = new ClientHandshakeMessage(
+        $handshake = new ClientHandshakeMessage(
             new ClientHandshakeStruct(
                 $clientVersion,
                 vec[
@@ -68,36 +54,35 @@ class Connection
             )
         );
 
-        $handshake = $handshakeMessage->write();
-        $this->send($handshake);
+        $this->socket->sendMessage($handshake);
 
-        $bytes = '';
-        \socket_recv($this->socket, inout $bytes, 2048, 0);
-        $buffer = new Buffer($bytes);
+        $buffer = $this->socket->receive();
+        $message = $reader->read($buffer);
 
-        $response = $reader->read($buffer);
+        $messageType = $message->getType();
 
-        $responseType = $response->getType();
-
-        if ($responseType === 'R') {
+        if ($messageType === 'R') {
             invariant(
-                $response is AuthenticationRequiredSASLMessage,
-                'Type R message should be a %s.',
-                AuthenticationRequiredSASLMessage::class
+                $message is AuthenticationRequiredSASLMessage,
+                'Type R message should be a %s but is a %s).',
+                AuthenticationRequiredSASLMessage::class,
+                \get_class($message)
             );
+
+            $this->handleAuthenticationRequiredSASLMessage($message);
         }
 
-        /*
-        if (!$clientVersion->supports($serverVersion))
-        {
-            throw new UnsupportedVersionException($clientVersion, $serverVersion);
-        }
-        */
-
-        \socket_close($this->socket);
+        $this->socket->close();
     }
 
-    private function send(string $bytes): void {
-        \socket_send($this->socket, $bytes, \strlen($bytes), 0);
+    private function handleAuthenticationRequiredSASLMessage(
+        AuthenticationRequiredSASLMessage $message
+    ): void {
+        $methods = $message->getValue()->getMethods();
+
+        $authenticatorFactory = new AuthenticatorFactory();
+        $authenticator = $authenticatorFactory->createFromMethods($methods);
+
+        $authenticator->authenticate();
     }
 }

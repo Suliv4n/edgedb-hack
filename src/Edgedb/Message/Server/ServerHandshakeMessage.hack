@@ -5,11 +5,12 @@ use type Edgedb\Message\AbstractMessage;
 use type Edgedb\Message\Struct\Param;
 use type Edgedb\Message\Type\Struct\ServerHandshakeStruct;
 use type Edgedb\Message\Buffer;
+use type Edgedb\Message\MessageTypeEnum;
 
 class ServerHandshakeMessage extends AbstractMessage<ServerHandshakeStruct> implements Readable
 {
     public function __construct(ServerHandshakeStruct $content) {
-        parent::__construct('v', $content);
+        parent::__construct(MessageTypeEnum::SERVER_HANDSHAKE, $content);
     }
 
     public static function read(Buffer $buffer): ServerHandshakeMessage
