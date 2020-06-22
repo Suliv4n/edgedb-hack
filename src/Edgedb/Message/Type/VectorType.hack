@@ -3,6 +3,7 @@ namespace Edgedb\Message\Type;
 use type Edgedb\Message\Buffer;
 use type Edgedb\Message\Readable;
 use type Edgedb\Message\Type\StringType;
+use type Edgedb\Message\Type\Struct\HeaderStruct;
 
 use namespace HH\Lib\Str;
 use namespace HH\Lib\C;
@@ -52,5 +53,16 @@ class VectorType<T as AbstractType<mixed>> extends AbstractType<vec<T>>
     ): VectorType<StringType> {
         $wrappedString = Vec\map<string, StringType>($strings, ($string) ==> new StringType($string));
         return new VectorType($wrappedString, $useLongIntForCount);
+    }
+
+    public static function fromMapToHeaders(
+        darray<int, string> $map
+    ): VectorType<HeaderStruct> {
+        $headers = vec[];
+        foreach ($map as $key => $value) {
+            $headers[] = new HeaderStruct($key, $value);
+        }
+
+        return new self<HeaderStruct>($headers);
     }
 }

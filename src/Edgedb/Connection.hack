@@ -6,12 +6,14 @@ use type Edgedb\Buffer\Message;
 use type Edgedb\Message\Reader;
 use type Edgedb\Protocol\Version;
 use type Edgedb\Message\Type\Struct\ClientHandshakeStruct;
+use type Edgedb\Message\Type\Struct\AuthenticationRequiredSASLStruct;
 use type Edgedb\Message\Type\Struct\ParamStruct;
 use type Edgedb\Message\Client\ClientHandshakeMessage;
 use type Edgedb\Message\Server\ServerHandshakeMessage;
-use type Edgedb\Message\Server\AuthenticationRequiredSASLMessage;
+use type Edgedb\Message\Server\AuthenticationMessage;
 use type Edgedb\Message\Buffer;
 use type Edgedb\Message\MessageTypeEnum;
+use type Edgedb\Authentication\AuthenticationStatusEnum;
 
 use namespace HH\Lib\Str;
 use namespace HH\Lib\Vec;
@@ -21,6 +23,7 @@ use function HH\invariant;
 class Connection
 {
     private Socket $socket;
+    private Reader $reader;
 
     public function __construct(
         string $host,
@@ -31,6 +34,12 @@ class Connection
     )
     {
         $this->socket = new Socket($host, $port);
+        $this->reader = new Reader();
+    }
+
+    public function getSocket(): Socket
+    {
+        return $this->socket;
     }
 
     public function connect(): void 
@@ -40,8 +49,6 @@ class Connection
 
     private function handshake(): void 
     {
-        $reader = new Reader();
-
         $clientVersion = new Version(0, 7);
         $handshake = new ClientHandshakeMessage(
             new ClientHandshakeStruct(
@@ -57,32 +64,46 @@ class Connection
         $this->socket->sendMessage($handshake);
 
         $buffer = $this->socket->receive();
-        $message = $reader->read($buffer);
+        $message = $this->reader->read($buffer);
 
         $messageType = $message->getType();
 
         if ($messageType === 'R') {
             invariant(
-                $message is AuthenticationRequiredSASLMessage,
+                $message is AuthenticationMessage,
                 'Type R message should be a %s but is a %s).',
-                AuthenticationRequiredSASLMessage::class,
+                AuthenticationMessage::class,
                 \get_class($message)
             );
 
-            $this->handleAuthenticationRequiredSASLMessage($message);
+            $messageContent = $message->getValue();
+            if ($messageContent->getAuthenticationStatus() === AuthenticationStatusEnum::AUTH_SASL) {
+                invariant(
+                    $messageContent is AuthenticationRequiredSASLStruct,
+                    'The message should contain a %s but contains a %s).',
+                    AuthenticationRequiredSASLStruct::class,
+                    \get_class($messageContent)
+                );
+            }
+
+            if (!($messageContent is AuthenticationRequiredSASLStruct)) {
+                throw new \Exception("wtf");
+            }
+
+            $this->handleAuthenticationRequiredSASLMessage($messageContent);
         }
 
         $this->socket->close();
     }
 
     private function handleAuthenticationRequiredSASLMessage(
-        AuthenticationRequiredSASLMessage $message
+        AuthenticationRequiredSASLStruct $authenticationStruct
     ): void {
-        $methods = $message->getValue()->getMethods();
+        $methods = $authenticationStruct->getMethods();
 
-        $authenticatorFactory = new AuthenticatorFactory();
+        $authenticatorFactory = new AuthenticatorFactory($this->socket, $this->reader);
         $authenticator = $authenticatorFactory->createFromMethods($methods);
 
-        $authenticator->authenticate();
+        $authenticator->authenticate($this->username, $this->password);
     }
 }

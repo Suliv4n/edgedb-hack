@@ -1,46 +1,34 @@
+
 namespace Edgedb\Message\Type\Struct;
 
-use type Edgedb\Message\Buffer;
-use type Edgedb\Message\Readable;
-use type Edgedb\Message\Type\Int32Type;
-use type Edgedb\Message\Type\VectorType;
-use type Edgedb\Message\Type\StringType;
 use type Edgedb\Authentication\AuthenticationStatusEnum;
+use type Edgedb\Message\Buffer;
+use type Edgedb\Message\Type\Int32Type;
+use type Edgedb\Message\Type\StringType;
 
-class AuthenticationRequiredSASLStruct extends AbstractStruct implements Readable
+class AuthenticationRequiredSASLStruct extends AuthenticationStruct
 {
-        public function __construct(
-            private AuthenticationStatusEnum $authenticationStatus,
-            private vec<string> $methods
-        ) {
-            parent::__construct(darray[
-                'auth_status' => new Int32Type($authenticationStatus),
-                'methods' => VectorType::fromStringVector($methods, true)
-            ]);
+    public function __construct(
+        private vec<string> $methods
+    ) {
+        parent::__construct(AuthenticationStatusEnum::AUTH_SASL);
+        $this->set('methods', $methods);
+    }
+
+    public function getMethods(): vec<string>
+    {
+        return $this->methods;
+    }
+    
+    public static function read(Buffer $buffer): AuthenticationRequiredSASLStruct
+    {
+        $methodsCount = Int32Type::read($buffer)->getValue();
+
+        $methods = vec[];
+        for ($i = 0; $i < $methodsCount; $i++) {
+            $methods[] = StringType::read($buffer)->getValue();
         }
 
-        public function getMethods(): vec<string>
-        {
-            return $this->methods;
-        }
-
-        public function getAuthenticationStatus(): int
-        {
-            return $this->authenticationStatus;
-        }
-
-        public static function read(Buffer $buffer): AuthenticationRequiredSASLStruct
-        {
-            $authenticationStatus = Int32Type::read($buffer)->getValue()
-                |> AuthenticationStatusEnum::assert($$);
-
-            $methodsCount = Int32Type::read($buffer)->getValue();
-
-            $methods = vec[];
-            for ($i = 0; $i < $methodsCount; $i++) {
-                $methods[] = StringType::read($buffer)->getValue();
-            }
-
-            return new self($authenticationStatus, $methods);
-        }
+        return new self($methods);
+    }
 }

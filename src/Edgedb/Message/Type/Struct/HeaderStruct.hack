@@ -7,12 +7,22 @@ use type Edgedb\Message\Type\Int16Type;
 
 class HeaderStruct extends AbstractStruct implements Readable
 {
-    public function __construct(int $key, string $value)
-    {
+    public function __construct(
+        private int $key,
+        private string $value
+    ) {
         parent::__construct(darray[
             'key' => new Int16Type($key),
             'value' => new BytesType($value)
         ]);
+    }
+
+    public function getKey(): int {
+        return $this->key;
+    }
+
+    public function getHeaderValue(): string {
+        return $this->value;
     }
 
     public static function read(Buffer $buffer): HeaderStruct
