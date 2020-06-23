@@ -30,9 +30,11 @@ class ErrorStruct extends AbstractStruct implements Readable
 
     public static function read(Buffer $buffer): ErrorStruct
     {
-        $code = Int32Type::read($buffer)->getValue();
         $severity = Int8Type::read($buffer)->getValue()
             |> ErrorSeverityEnum::assert($$);
+        
+        $code = Int32Type::read($buffer)->getValue();
+
         $message = StringType::read($buffer)->getValue();
 
         $attributesCount = Int16Type::read($buffer)->getValue();

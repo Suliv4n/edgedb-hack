@@ -1,6 +1,7 @@
 namespace Edgedb\Message\Type\Struct;
 
 use type Edgedb\Message\Type\StringType;
+use type Edgedb\Message\Type\BytesType;
 
 class AuthenticationSASLInitialResponseStruct extends AbstractStruct
 {
@@ -10,7 +11,7 @@ class AuthenticationSASLInitialResponseStruct extends AbstractStruct
     ) {
         parent::__construct(darray[
             'method' => new StringType($method),
-            'sasl_data' => new StringType($saslData)
+            'sasl_data' => new BytesType($saslData)
         ]);
     }
 }

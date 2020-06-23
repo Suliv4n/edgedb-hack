@@ -30,8 +30,10 @@ abstract class AuthenticationStruct extends AbstractStruct implements Readable
             switch ($authenticationStatus) {
                 case AuthenticationStatusEnum::AUTH_SASL:
                     return AuthenticationRequiredSASLStruct::read($buffer);
+                case AuthenticationStatusEnum::AUTH_SASL_CONTINUE:
+                    return AuthenticationSASLContinueStruct::read($buffer);
                 default:
-                    throw new \Exception("Not yet implemented");
+                    throw new \Exception("Not yet implemented : " . AuthenticationStatusEnum::getNames()[$authenticationStatus]);
             }
         }
 }
