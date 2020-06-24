@@ -2,6 +2,8 @@ namespace Edgedb\Authentication;
 
 use type Edgedb\Message\Client\AuthenticationSASLInitialResponseMessage;
 use type Edgedb\Message\Type\Struct\AuthenticationSASLInitialResponseStruct;
+use type Edgedb\Message\Client\AuthenticationSASLResponseMessage;
+use type Edgedb\Message\Type\Struct\AuthenticationSASLResponseStruct;
 use type Edgedb\Message\MessageTypeEnum;
 use type Edgedb\Message\Type\Struct\AuthenticationSASLContinueStruct;
 use type Edgedb\Exception\ProtocolException;
@@ -39,9 +41,27 @@ class SaslAuthenticator extends AbstractAuthenticator
             AuthenticationSASLContinueStruct::class
         );
 
-        $saslMessage = $serverMessageContent->getSaslData();
+        $serverFirst = $serverMessageContent->getSaslData();
 
-        $scramParameters = $scram->parseScramMessage($saslMessage);
-        \var_dump($scramParameters);
+        $scramParameters = $scram->parseScramMessage($serverFirst);
+
+        list($clientFinalMessage, $serverProof) = $scram->buildClientFinalMessage(
+            $password ?? '',
+            $scramParameters['salt'],
+            $scramParameters['iterations'],
+            $clientFirstBare,
+            $serverFirst,
+            $scramParameters['nonce']
+        );
+
+        $message = new AuthenticationSASLResponseMessage(
+            new AuthenticationSASLResponseStruct($clientFinalMessage)
+        );
+        
+        $this->socket->sendMessage($message);
+
+        $buffer = $this->socket->receive();
+
+        $this->reader->read($buffer);
     }
 }
