@@ -34,7 +34,8 @@ class Scram
     public function generateNonce(
         int $length = self::RAW_NONCE_LENGTH
     ): string {
-        return random_bytes($length);
+        //return random_bytes($length);
+        return "123456789123456789";
     }
 
     public function generateBareFromNonceAndUsername(string $nonce, string $username): string
@@ -42,7 +43,7 @@ class Scram
         return Str\format(
             'n=%s,r=%s',
             $this->saslprep($username),
-            base64_encode($nonce) |> \rtrim($$, '=')
+            $nonce
         );
     }
 
@@ -62,8 +63,8 @@ class Scram
             throw new MalformedScramException($scramMessage);
         }
 
-        $nonce = $this->extractValue($saslData[0]) |> base64_decode($$);
-        $salt = $this->extractValue($saslData[1]) |> base64_decode($$);
+        $nonce = $this->extractValue($saslData[0]);
+        $salt = $this->extractValue($saslData[1]);
         $iterations = $this->extractValue($saslData[2]) |> intval($$);
 
         return shape(
@@ -95,7 +96,7 @@ class Scram
         string $serverNonce
     ): (string, string) {
         $clientFinal = Str\format(
-            'c=biws,r=%s', base64_encode($serverNonce)
+            'c=biws,r=%s', $serverNonce
         );
 
         $authMessage = Str\join(
@@ -105,29 +106,27 @@ class Scram
                 $clientFinal
             ],    
             ','
-        ) |> utf8_encode($$);
+        ) |> utf8_decode($$);
 
         $saltedPassword = $this->getSaltedPassword(
-            utf8_decode($this->saslprep($password)),
+            $this->saslprep($password),
             $salt,
             $iterations
         );
 
-        $clientKey = hash_hmac('sha256', utf8_decode('Client Key'), $saltedPassword);
-        $storedKey = hash('sha256', $clientKey);
-        $clientSignature = hash_hmac('sha256', $authMessage, $storedKey);
+        $clientKey = hash_hmac('sha256', utf8_decode('Client Key'), $saltedPassword, true);
+        $storedKey = hash('sha256', $clientKey, true);
+        $clientSignature = hash_hmac('sha256', $authMessage, $storedKey, true);
         $clientProof = $this->xor($clientKey, $clientSignature);
 
-        $sevrerKey = hash_hmac('sha256', utf8_decode('Server Key'), $saltedPassword);
-        $serverProof = hash_hmac('sha256', $authMessage, $sevrerKey);
+        $sevrerKey = hash_hmac('sha256', utf8_decode('Server Key'), $saltedPassword, true);
+        $serverProof = hash_hmac('sha256', $authMessage, $sevrerKey, true);
 
         $clientFinalMessage = Str\format(
             '%s,p=%s',
             $clientFinal,
             base64_encode($clientProof)
         );
-
-        \var_dump($clientFinalMessage);
 
         return tuple($clientFinalMessage, $serverProof);
     }
@@ -137,11 +136,13 @@ class Scram
         string $salt,
         int $iterations 
     ): string {
-        $hi = hash_hmac('sha256', $password, $salt . hex2bin('00000001'));
+        $decodedSalt = base64_decode($salt, true);
+
+        $hi = hash_hmac('sha256', $decodedSalt . hex2bin('00000001'), $password, true);
         $ui = $hi;
 
         for ($i = 0; $i < $iterations - 1; $i++) {
-            $ui = hash_hmac('sha256', $password, $ui);
+            $ui = hash_hmac('sha256', $ui, $password, true);
             $hi = $this->xor($hi, $ui);
         }
 
