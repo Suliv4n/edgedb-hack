@@ -22,4 +22,10 @@ class Buffer
     {
         $this->cursor = $cursor;
     }
+
+    public function sliceFromCursor(): void
+    {
+        $this->bytes = Str\slice($this->bytes, $this->cursor);
+        $this->cursor = 0;
+    }
 }

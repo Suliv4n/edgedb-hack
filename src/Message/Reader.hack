@@ -6,6 +6,8 @@ use type Edgedb\Message\Type\Struct\AbstractStruct;
 use type Edgedb\Message\Type\CharType;
 use type Edgedb\Message\Server\ServerHandshakeMessage;
 use type Edgedb\Message\Server\AuthenticationMessage;
+use type Edgedb\Message\Server\CommandCompleteMessage;
+use type Edgedb\Message\Server\ReadyForCommandMessage;
 use type Edgedb\Exception\UnexpectedMessageTypeException;
 use type Edgedb\Exception\ServerErrorException;
 
@@ -31,6 +33,10 @@ class Reader
                 return ServerHandshakeMessage::read($buffer);
             case MessageTypeEnum::AUTHENTICATION:
                 return AuthenticationMessage::read($buffer);
+            case MessageTypeEnum::COMMAND_COMPLETE:
+                return CommandCompleteMessage::read($buffer);
+            case MessageTypeEnum::READY_FOR_COMMAND:
+                return ReadyForCommandMessage::read($buffer);
             default:
                 throw new \Exception('Unknown message type ' . $messageType . '.');
         }

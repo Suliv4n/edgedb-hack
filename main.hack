@@ -1,4 +1,4 @@
-use type Edgedb\Connection;
+use type Edgedb\Client;
 
 include(__DIR__ . '/vendor/autoload.hack');
 
@@ -9,7 +9,7 @@ function main(): noreturn {
     
     Facebook\AutoloadMap\initialize();
 
-    $connection = new Connection(
+    $connection = new Client(
         '127.0.0.1',
         5656,
         'edgedb',
@@ -17,7 +17,13 @@ function main(): noreturn {
         'root'
     );
 
-    $connection->connect();
+    try {
+        $connection->connect();
+        $connection->execute("START TRANSACTION;");
+    }
+    finally {
+        $connection->close();
+    }
 
     exit(0);
 }

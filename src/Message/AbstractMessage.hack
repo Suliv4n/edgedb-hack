@@ -7,6 +7,7 @@ use type Edgedb\Message\Type\AbstractType;
 use type Edgedb\Message\Type\Struct\AbstractStruct;
 use type Edgedb\Message\Type\Int32Type;
 use type Edgedb\Message\Type\CharType;
+use type Edgedb\Message\MessageTypeEnum;
 
 abstract class AbstractMessage<+T as AbstractStruct> extends AbstractType<T>
 {
@@ -19,9 +20,9 @@ abstract class AbstractMessage<+T as AbstractStruct> extends AbstractType<T>
         parent::__construct($content);
     }
 
-    public function getType(): string
+    public function getType(): MessageTypeEnum
     {
-        return $this->type;
+        return MessageTypeEnum::assert($this->type);
     }
 
     public function getLength(): int
