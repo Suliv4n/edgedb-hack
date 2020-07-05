@@ -14,7 +14,7 @@ function main(): noreturn {
         5656,
         'edgedb',
         'edgedb',
-        'admin'
+        'root'
     );
 
     $connection->connect();

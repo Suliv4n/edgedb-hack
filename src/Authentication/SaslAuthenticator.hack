@@ -6,6 +6,7 @@ use type Edgedb\Message\Client\AuthenticationSASLResponseMessage;
 use type Edgedb\Message\Type\Struct\AuthenticationSASLResponseStruct;
 use type Edgedb\Message\MessageTypeEnum;
 use type Edgedb\Message\Type\Struct\AuthenticationSASLContinueStruct;
+use type Edgedb\Message\Type\Struct\AuthenticationSASLFinalStruct;
 use type Edgedb\Exception\ProtocolException;
 
 class SaslAuthenticator extends AbstractAuthenticator
@@ -37,7 +38,7 @@ class SaslAuthenticator extends AbstractAuthenticator
 
         invariant(
             $serverMessageContent is AuthenticationSASLContinueStruct, 
-            "Message content should be a %s",
+            'Message content should be a %s',
             AuthenticationSASLContinueStruct::class
         );
 
@@ -62,6 +63,20 @@ class SaslAuthenticator extends AbstractAuthenticator
 
         $buffer = $this->socket->receive();
 
-        $this->reader->read($buffer);
+        $finalServerMessage = $this->reader->read($buffer);
+        $finalServerMessageContent = $finalServerMessage->getValue();
+
+        invariant(
+            $finalServerMessageContent is AuthenticationSASLFinalStruct, 
+            'Message content should be a %s',
+            AuthenticationSASLFinalStruct::class
+        );
+        
+        $serverFinalSaslData = $finalServerMessageContent->getSaslData();
+        $serverSignature = $scram->parseServerFinalMessage($serverFinalSaslData);
+
+        if ($serverSignature !== $serverProof) {
+            throw new ProtocolException('Server SCRAM proof does not match');
+        }
     }
 }

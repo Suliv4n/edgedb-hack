@@ -34,8 +34,7 @@ class Scram
     public function generateNonce(
         int $length = self::RAW_NONCE_LENGTH
     ): string {
-        //return random_bytes($length);
-        return "123456789123456789";
+        return random_bytes($length);
     }
 
     public function generateBareFromNonceAndUsername(string $nonce, string $username): string
@@ -43,7 +42,7 @@ class Scram
         return Str\format(
             'n=%s,r=%s',
             $this->saslprep($username),
-            $nonce
+            base64_encode($nonce)
         );
     }
 
@@ -59,7 +58,7 @@ class Scram
     {
         $saslData = Str\split($scramMessage, ',');
 
-        if ($this->areSaslParametersValid($saslData)) {
+        if ($this->areSaslFirstServerMessageValid($saslData)) {
             throw new MalformedScramException($scramMessage);
         }
 
@@ -74,12 +73,29 @@ class Scram
         );
     }
 
-    private function areSaslParametersValid(vec<string> $saslData): bool {
-        
+    private function areSaslFirstServerMessageValid(vec<string> $saslData): bool {
         return C\count($saslData) === 3
             && Str\slice($saslData[0], 2) === 'r='
             && Str\slice($saslData[1], 2) === 's='
             && Regex\matches($saslData[2], re'/i=[0-9]+/');
+    }
+
+    public function parseServerFinalMessage(string $scramMessage): string
+    {
+        $saslData = Str\split($scramMessage, ',');
+        
+        if ($this->areSaslFinalServerMessageValid($saslData)) {
+            throw new MalformedScramException($scramMessage);
+        }
+
+        $serverSignature = $this->extractValue($saslData[0]);
+
+        return base64_decode($serverSignature);
+    }
+
+    private function areSaslFinalServerMessageValid(vec<string> $saslData): bool {
+        return C\count($saslData) === 1
+            && Str\slice($saslData[0], 2) === 'v=';
     }
 
     private function extractValue(string $saslParameter): string
