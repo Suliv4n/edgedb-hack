@@ -7,6 +7,9 @@ enum MessageTypeEnum: string as string
     AUTHENTICATION_SASL_ITINIAL_RESPONSE = 'p';
     AUTHENTICATION_CLIENT_FINAL = 'r';
     EXECUTE_SCRIPT = 'Q';
+    EXECUTE = 'E';
+    PREPARE = 'P';
+    SYNCH = 'S';
     
     // Server
     SERVER_HANDSHAKE = 'v';
@@ -14,4 +17,5 @@ enum MessageTypeEnum: string as string
     ERROR = 'E';
     COMMAND_COMPLETE = 'C';
     READY_FOR_COMMAND = 'Z';
+    PREPARE_COMPLETE = '1';
 }

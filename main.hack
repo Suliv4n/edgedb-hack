@@ -19,7 +19,7 @@ function main(): noreturn {
 
     try {
         $connection->connect();
-        $connection->execute("START TRANSACTION;");
+        $connection->fetchMany("SELECT Person { first_name, last_name} FILTER .first_name = 'Sulivan';");
     }
     finally {
         $connection->close();

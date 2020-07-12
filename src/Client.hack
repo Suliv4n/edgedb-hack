@@ -6,20 +6,30 @@ use type Edgedb\Buffer\Message;
 use type Edgedb\Buffer\WriteBuffer;
 use type Edgedb\Exception\ConcurrentOperationException;
 use type Edgedb\Message\Buffer;
+use type Edgedb\Message\CardinalityEnum;
 use type Edgedb\Message\Client\ClientHandshakeMessage;
+use type Edgedb\Message\Client\ExecuteMessage;
 use type Edgedb\Message\Client\ExecuteScriptMessage;
+use type Edgedb\Message\Client\PrepareMessage;
+use type Edgedb\Message\Client\SynchMessage;
+use type Edgedb\Message\IOFormatEnum;
 use type Edgedb\Message\MessageTypeEnum;
 use type Edgedb\Message\Reader;
 use type Edgedb\Message\Server\AuthenticationMessage;
+use type Edgedb\Message\Server\CommandCompleteMessage;
+use type Edgedb\Message\Server\PrepareCompleteMessage;
+use type Edgedb\Message\Server\ReadyForCommandMessage;
 use type Edgedb\Message\Server\ServerHandshakeMessage;
 use type Edgedb\Message\Type\Struct\AuthenticationRequiredSASLStruct;
 use type Edgedb\Message\Type\Struct\ClientHandshakeStruct;
 use type Edgedb\Message\Type\Struct\CommandCompleteStruct;
 use type Edgedb\Message\Type\Struct\ExecuteScriptStruct;
-use type Edgedb\Message\Type\Struct\ReadyForCommandStruct;
+use type Edgedb\Message\Type\Struct\ExecuteStruct;
 use type Edgedb\Message\Type\Struct\ParamStruct;
+use type Edgedb\Message\Type\Struct\PrepareCompleteStruct;
+use type Edgedb\Message\Type\Struct\PrepareStruct;
+use type Edgedb\Message\Type\Struct\ReadyForCommandStruct;
 use type Edgedb\Protocol\Version;
-use type Edgedb\Message\Server\CommandCompleteMessage;
 use type Edgedb\TransactionTypeEnum;
 
 use namespace HH\Lib\Str;
@@ -53,7 +63,7 @@ class Client
     }
 
     public function connect(): void 
-    {   
+    {
         $this->handshake();
     }
 
@@ -121,6 +131,31 @@ class Client
         }
     }
 
+    public function fetchOne(string $query, dict<string, mixed> $arguments = dict[]): mixed
+    {
+        $this->beginOperation();
+        try {
+            $this->fetch($query, $arguments, false, true);
+        } finally {
+            $this->endOperation();
+        }
+
+        return null;
+    }
+
+    public function fetchMany(string $query, dict<string, mixed> $arguments = dict[]): mixed
+    {
+        $this->beginOperation();
+        try {
+            $this->fetch($query, $arguments, false, false);
+        } finally {
+            $this->endOperation();
+        }
+
+        return null;
+    }
+
+
     private function beginOperation(): void
     {
         if ($this->isOperationInProgress) {
@@ -144,6 +179,11 @@ class Client
         $parsing = true;
         $responseBuffer = $this->socket->receive();
         while ($parsing) {
+
+            if ($responseBuffer->isConsumed()) {
+                $responseBuffer = $this->socket->receive();
+            }
+
             $responseMessage = $this->reader->read($responseBuffer);
             $responseMessageContent = $responseMessage->getValue();
 
@@ -154,8 +194,6 @@ class Client
                     CommandCompleteStruct::class,
                     get_class($responseMessageContent)
                 );
-
-                \var_dump($responseMessageContent->getStatus());
 
                 $status = $responseMessageContent->getStatus();
             } else if ($responseMessage->getType() === MessageTypeEnum::READY_FOR_COMMAND) {
@@ -168,14 +206,80 @@ class Client
 
                 $this->serverTransactionStatus = $responseMessageContent->getTransactionState();
 
-                \var_dump($this->serverTransactionStatus);
                 $parsing = false;
-            } else {
-                throw new \Exception("We should not be here");
             }
 
             $responseBuffer->sliceFromCursor();
         }
+    }
+
+    private function fetch(
+        string $query,
+        dict<string, mixed> $arguments,
+        bool $asJson,
+        bool $expectOne
+    ): mixed {
+        $this->parse($query, $asJson, $expectOne);
+        //$this->executeFlow($arguments);
+
+        return null;
+    }
+
+    private function parse(
+        string $query,
+        bool $asJson,
+        bool $expectOne
+    ): mixed {
+        $prepareMessage = new PrepareMessage(
+            new PrepareStruct(
+                vec[],
+                $asJson ? IOFormatEnum::JSON : IOFormatEnum::BINARY,
+                $expectOne ? CardinalityEnum::ONE : CardinalityEnum::MANY,
+                '',
+                $query
+            )
+        );
+
+        $this->socket->sendMessage($prepareMessage, new SynchMessage());
+        $responseBuffer = $this->socket->receive();
+
+        $parsing = true;
+
+        while ($parsing) {
+            if ($responseBuffer->isConsumed()) {
+                $responseBuffer = $this->socket->receive();
+            }
+
+            $responseMessage = $this->reader->read($responseBuffer);
+            
+            if ($responseMessage is PrepareCompleteMessage) {
+                \var_dump("Prepare complete");
+            } else if ($responseMessage is ReadyForCommandMessage) {
+                $this->serverTransactionStatus = $responseMessage->getValue()->getTransactionState();
+                $parsing = false;
+            }
+
+            $responseBuffer->sliceFromCursor();
+        }
+
+        return null;
+    }
+
+    private function executeFlow(dict<string, mixed> $arguments): vec<mixed> {
+        $result = vec[];
+
+        /*$executeMessage = new PrepareMessage(
+            new PrepareStruct(
+                vec[],
+                '',
+                ''
+            )
+        );
+
+        $this->socket->sendMessage($executeMessage);
+        */
+
+        return $result;
     }
 
     private function endOperation(): void

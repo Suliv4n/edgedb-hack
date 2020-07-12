@@ -35,9 +35,13 @@ class Socket
         }
     }
 
-    public function sendMessage<T as AbstractStruct>(AbstractMessage<T> $message): void
+    public function sendMessage<T as AbstractStruct>(AbstractMessage<T> ...$messages): void
     {
-        $bytes = $message->write();
+        $bytes = '';
+        foreach ($messages as $message) {
+            $bytes .= $message->write();
+        }
+
         socket_send($this->socket, $bytes, Str\length($bytes), 0);
     }
 
@@ -46,7 +50,7 @@ class Socket
         $bytes = '';
         socket_recv($this->socket, inout $bytes, 2048, 0);
 
-        return new Buffer($bytes);;
+        return new Buffer($bytes);
     }
 
     public function close(): void
