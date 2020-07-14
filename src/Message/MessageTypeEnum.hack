@@ -10,6 +10,7 @@ enum MessageTypeEnum: string as string
     EXECUTE = 'E';
     PREPARE = 'P';
     SYNCH = 'S';
+    DESCRIBE_STATEMENT = 'D';
     
     // Server
     SERVER_HANDSHAKE = 'v';
@@ -18,4 +19,5 @@ enum MessageTypeEnum: string as string
     COMMAND_COMPLETE = 'C';
     READY_FOR_COMMAND = 'Z';
     PREPARE_COMPLETE = '1';
+    COMMAND_DATA_DESCRIPTION = 'T';
 }

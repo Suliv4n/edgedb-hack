@@ -4,14 +4,17 @@ use type Edgedb\Authentication\AuthenticationStatusEnum;
 use type Edgedb\Authentication\AuthenticatorFactory;
 use type Edgedb\Buffer\Message;
 use type Edgedb\Buffer\WriteBuffer;
+use type Edgedb\Codec\CodecRegistery;
 use type Edgedb\Exception\ConcurrentOperationException;
 use type Edgedb\Message\Buffer;
 use type Edgedb\Message\CardinalityEnum;
 use type Edgedb\Message\Client\ClientHandshakeMessage;
+use type Edgedb\Message\Client\DescribeStatementMessage;
 use type Edgedb\Message\Client\ExecuteMessage;
 use type Edgedb\Message\Client\ExecuteScriptMessage;
 use type Edgedb\Message\Client\PrepareMessage;
 use type Edgedb\Message\Client\SynchMessage;
+use type Edgedb\Message\DescribeAspectEnum;
 use type Edgedb\Message\IOFormatEnum;
 use type Edgedb\Message\MessageTypeEnum;
 use type Edgedb\Message\Reader;
@@ -20,9 +23,11 @@ use type Edgedb\Message\Server\CommandCompleteMessage;
 use type Edgedb\Message\Server\PrepareCompleteMessage;
 use type Edgedb\Message\Server\ReadyForCommandMessage;
 use type Edgedb\Message\Server\ServerHandshakeMessage;
+use type Edgedb\Message\Server\CommandDataDescriptionMessage;
 use type Edgedb\Message\Type\Struct\AuthenticationRequiredSASLStruct;
 use type Edgedb\Message\Type\Struct\ClientHandshakeStruct;
 use type Edgedb\Message\Type\Struct\CommandCompleteStruct;
+use type Edgedb\Message\Type\Struct\DescribeStatementStruct;
 use type Edgedb\Message\Type\Struct\ExecuteScriptStruct;
 use type Edgedb\Message\Type\Struct\ExecuteStruct;
 use type Edgedb\Message\Type\Struct\ParamStruct;
@@ -44,6 +49,7 @@ class Client
     private Reader $reader;
     private bool $isOperationInProgress = false;
     private ?TransactionTypeEnum $serverTransactionStatus = null;
+    private CodecRegistery $codecRegistery;
 
     public function __construct(
         string $host,
@@ -55,6 +61,7 @@ class Client
     {
         $this->socket = new Socket($host, $port);
         $this->reader = new Reader();
+        $this->codecRegistery = new CodecRegistery();
     }
 
     public function getSocket(): Socket
@@ -253,7 +260,7 @@ class Client
             $responseMessage = $this->reader->read($responseBuffer);
             
             if ($responseMessage is PrepareCompleteMessage) {
-                \var_dump("Prepare complete");
+                $this->handlePrepareCompleteMessage($responseMessage);
             } else if ($responseMessage is ReadyForCommandMessage) {
                 $this->serverTransactionStatus = $responseMessage->getValue()->getTransactionState();
                 $parsing = false;
@@ -263,6 +270,49 @@ class Client
         }
 
         return null;
+    }
+
+    private function handlePrepareCompleteMessage(PrepareCompleteMessage $message): void
+    {
+        $inTypedesc = $message->getValue()->getInputTypedescId();
+        $outTypedesc = $message->getValue()->getOutputTypedescId();
+
+        $inCodec =  $this->codecRegistery->get($inTypedesc);
+        $outCodec = $this->codecRegistery->get($outTypedesc);
+
+        if ($inCodec === null || $outCodec === null)
+        {
+            $describeStatementMessage = new DescribeStatementMessage(
+                new DescribeStatementStruct(
+                    vec[],
+                    DescribeAspectEnum::DATA_DESCRIPTION
+                )
+            );
+
+            $parsing = true;
+
+            $this->socket->sendMessage($describeStatementMessage, new SynchMessage());
+
+            $responseMessageBuffer = $this->socket->receive();
+            
+
+            while ($parsing) {
+                if ($responseMessageBuffer->isConsumed()) {
+                    $responseMessageBuffer = $this->socket->receive();
+                }
+
+                $responseMessage = $this->reader->read($responseMessageBuffer);
+
+                if ($responseMessage is CommandDataDescriptionMessage) {
+                    \var_dump('Description received !');
+                } else if ($responseMessage is ReadyForCommandMessage) {
+                    $this->serverTransactionStatus = $responseMessage->getValue()->getTransactionState();
+                    $parsing = false;
+                }
+
+                $responseMessageBuffer->sliceFromCursor();
+            }
+        }
     }
 
     private function executeFlow(dict<string, mixed> $arguments): vec<mixed> {
