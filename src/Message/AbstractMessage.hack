@@ -5,7 +5,7 @@ use namespace HH\Lib\Str;
 use type Edgedb\Message\Buffer;
 use type Edgedb\Message\Type\AbstractType;
 use type Edgedb\Message\Type\Struct\AbstractStruct;
-use type Edgedb\Message\Type\Int32Type;
+use type Edgedb\Message\Type\UInt32Type;
 use type Edgedb\Message\Type\CharType;
 use type Edgedb\Message\MessageTypeEnum;
 
@@ -36,7 +36,7 @@ abstract class AbstractMessage<+T as AbstractStruct> extends AbstractType<T>
         $length = $this->getLength();
 
         $buffer = (new CharType($this->type))->write()
-            . (new Int32Type($length))->write()
+            . (new UInt32Type($length))->write()
             . $buffer;
 
         return $buffer;

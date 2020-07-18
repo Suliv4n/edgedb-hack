@@ -1,7 +1,9 @@
 namespace Edgedb\Codec;
 
-interface CodecInterface<T>
+use type Edgedb\Message\Buffer;
+
+interface CodecInterface
 {
-    public function encode(T $value): string;
-    public function decode(string $value): T;
+    public function encode(mixed $value): string;
+    public function decode(Buffer $buffer): mixed;
 }

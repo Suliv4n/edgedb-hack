@@ -9,7 +9,7 @@ class BytesType extends AbstractType<string> implements Readable
     public function write(): string
     {
         $length = Str\length($this->getValue());
-        $length = new Int32Type($length);
+        $length = new UInt32Type($length);
         
         return $length->write() . $this->getValue();
     }
@@ -21,7 +21,7 @@ class BytesType extends AbstractType<string> implements Readable
 
     public static function read(Buffer $buffer): BytesType 
     {
-        $length = Int32Type::read($buffer)->getValue();
+        $length = UInt32Type::read($buffer)->getValue();
         $bytes = $buffer->read($length);
 
         return new self($bytes);

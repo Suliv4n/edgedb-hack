@@ -304,7 +304,7 @@ class Client
                 $responseMessage = $this->reader->read($responseMessageBuffer);
 
                 if ($responseMessage is CommandDataDescriptionMessage) {
-                    \var_dump('Description received !');
+                    $this->handleCommandDataDescriptionMessage($responseMessage);
                 } else if ($responseMessage is ReadyForCommandMessage) {
                     $this->serverTransactionStatus = $responseMessage->getValue()->getTransactionState();
                     $parsing = false;
@@ -313,6 +313,11 @@ class Client
                 $responseMessageBuffer->sliceFromCursor();
             }
         }
+    }
+
+    private function handleCommandDataDescriptionMessage(CommandDataDescriptionMessage $message): void
+    {
+        
     }
 
     private function executeFlow(dict<string, mixed> $arguments): vec<mixed> {

@@ -3,7 +3,7 @@ namespace Edgedb\Message\Type\Struct;
 use type Edgedb\Message\Buffer;
 use type Edgedb\Message\Readable;
 use type Edgedb\Message\Type\BytesType;
-use type Edgedb\Message\Type\Int16Type;
+use type Edgedb\Message\Type\UInt16Type;
 
 class HeaderStruct extends AbstractStruct implements Readable
 {
@@ -12,7 +12,7 @@ class HeaderStruct extends AbstractStruct implements Readable
         private string $value
     ) {
         parent::__construct(darray[
-            'key' => new Int16Type($key),
+            'key' => new UInt16Type($key),
             'value' => new BytesType($value)
         ]);
     }
@@ -27,7 +27,7 @@ class HeaderStruct extends AbstractStruct implements Readable
 
     public static function read(Buffer $buffer): HeaderStruct
     {
-        $key = Int16Type::read($buffer)->getValue();
+        $key = UInt16Type::read($buffer)->getValue();
         $name = BytesType::read($buffer)->getValue();
 
         return new self($key, $name);

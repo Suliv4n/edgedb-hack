@@ -3,7 +3,7 @@ namespace Edgedb\Message\Type\Struct;
 use type Edgedb\Message\Buffer;
 use type Edgedb\Message\Readable;
 use type Edgedb\Message\Type\StringType;
-use type Edgedb\Message\Type\Int16Type;
+use type Edgedb\Message\Type\UInt16Type;
 use type Edgedb\Message\Type\VectorType;
 
 class ProtocolExtStruct extends AbstractStruct implements Readable
@@ -22,7 +22,7 @@ class ProtocolExtStruct extends AbstractStruct implements Readable
     {
         $name = StringType::read($buffer)->getValue();
         
-        $headersCount = Int16Type::read($buffer)->getValue();
+        $headersCount = UInt16Type::read($buffer)->getValue();
 
         $headers = vec[];
         for ($i = 0; $i < $headersCount; $i++) {

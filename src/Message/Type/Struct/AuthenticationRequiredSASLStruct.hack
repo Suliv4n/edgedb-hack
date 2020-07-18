@@ -3,7 +3,7 @@ namespace Edgedb\Message\Type\Struct;
 
 use type Edgedb\Authentication\AuthenticationStatusEnum;
 use type Edgedb\Message\Buffer;
-use type Edgedb\Message\Type\Int32Type;
+use type Edgedb\Message\Type\UInt32Type;
 use type Edgedb\Message\Type\StringType;
 
 class AuthenticationRequiredSASLStruct extends AuthenticationStruct
@@ -22,7 +22,7 @@ class AuthenticationRequiredSASLStruct extends AuthenticationStruct
     
     public static function read(Buffer $buffer): AuthenticationRequiredSASLStruct
     {
-        $methodsCount = Int32Type::read($buffer)->getValue();
+        $methodsCount = UInt32Type::read($buffer)->getValue();
 
         $methods = vec[];
         for ($i = 0; $i < $methodsCount; $i++) {

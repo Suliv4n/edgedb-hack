@@ -24,9 +24,9 @@ class VectorType<T as AbstractType<mixed>> extends AbstractType<vec<T>>
         $count = C\count($this->getValue());
         
         if ($this->useLongIntForCount) {
-            $buffer = (new Int32Type($count))->write();
+            $buffer = (new UInt32Type($count))->write();
         } else {
-            $buffer = (new Int16Type($count))->write();
+            $buffer = (new UInt16Type($count))->write();
         }
 
         foreach ($this->getValue() as $value) {
@@ -38,7 +38,8 @@ class VectorType<T as AbstractType<mixed>> extends AbstractType<vec<T>>
 
     public function getLength(): int
     {
-        $length = 2;
+        $length = $this->useLongIntForCount ? 4 : 2;
+
         foreach ($this->getValue() as $element)
         {
             $length += $element->getLength();

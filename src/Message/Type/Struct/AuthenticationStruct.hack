@@ -2,7 +2,7 @@ namespace Edgedb\Message\Type\Struct;
 
 use type Edgedb\Message\Buffer;
 use type Edgedb\Message\Readable;
-use type Edgedb\Message\Type\Int32Type;
+use type Edgedb\Message\Type\UInt32Type;
 use type Edgedb\Message\Type\VectorType;
 use type Edgedb\Message\Type\StringType;
 use type Edgedb\Authentication\AuthenticationStatusEnum;
@@ -13,7 +13,7 @@ abstract class AuthenticationStruct extends AbstractStruct implements Readable
             private AuthenticationStatusEnum $authenticationStatus,
         ) {
             parent::__construct(darray[
-                'auth_status' => new Int32Type($authenticationStatus)
+                'auth_status' => new UInt32Type($authenticationStatus)
             ]);
         }
 
@@ -24,7 +24,7 @@ abstract class AuthenticationStruct extends AbstractStruct implements Readable
 
         public static function read(Buffer $buffer): AuthenticationStruct
         {
-            $authenticationStatus = Int32Type::read($buffer)->getValue()
+            $authenticationStatus = UInt32Type::read($buffer)->getValue()
                 |> AuthenticationStatusEnum::assert($$);
 
             switch ($authenticationStatus) {

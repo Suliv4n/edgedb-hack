@@ -1,5 +1,7 @@
 namespace Edgedb\Message;
 
+use type Exception;
+
 use namespace HH\Lib\Str;
 
 class Buffer
@@ -32,6 +34,15 @@ class Buffer
     public function isConsumed(): bool
     {
         return $this->cursor === Str\length($this->bytes);
+    }
+
+    public function discard(int $length): void
+    {
+        if ($this->cursor + $length > Str\length($this->bytes)) {
+            throw new Exception("Buffer overread");
+        }
+
+        $this->cursor += $length;
     }
 
     public function __toString(): string {

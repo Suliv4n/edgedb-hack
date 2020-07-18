@@ -6,7 +6,7 @@ use type Edgedb\Message\CardinalityEnum;
 use type Edgedb\Message\Type\CharType;
 use type Edgedb\Message\Type\VectorType;
 use type Edgedb\Message\Type\UuidType;
-use type Edgedb\Message\Type\Int16Type;
+use type Edgedb\Message\Type\UInt16Type;
 
 class PrepareCompleteStruct extends AbstractStruct implements Readable
 {
@@ -36,7 +36,7 @@ class PrepareCompleteStruct extends AbstractStruct implements Readable
 
     public static function read(Buffer $buffer): PrepareCompleteStruct
     {
-        $headersCount = Int16Type::read($buffer)->getValue();
+        $headersCount = UInt16Type::read($buffer)->getValue();
         $headers = vec[];
         for ($i = 0; $i < $headersCount; $i++) {
             $headers[] = HeaderStruct::read($buffer);

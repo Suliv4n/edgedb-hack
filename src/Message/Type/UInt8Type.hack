@@ -4,25 +4,24 @@ use Edgedb\Message\Buffer;
 use type Edgedb\Message\Readable;
 
 use function pack;
-use function unpack;
 
-class Int32Type extends AbstractType<int>
+class UInt8Type extends AbstractType<int> implements Readable
 {
     public function write(): string
     {
-        $bytes = pack('l', $this->getValue());
+        $bytes = pack('C', $this->getValue());
         return $bytes;
     }
 
     public function getLength(): int
     {
-        return 4;
+        return 1;
     }
 
-    public static function read(Buffer $buffer): Int32Type
+    public static function read(Buffer $buffer): UInt8Type
     {
-        $value = $buffer->read(4) 
-            |> unpack('l', $$)[1];
+        $value = $buffer->read(1)
+            |> \unpack('C', $$)[1];
 
         return new self($value);
     }

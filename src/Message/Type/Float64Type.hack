@@ -3,23 +3,23 @@ namespace Edgedb\Message\Type;
 use Edgedb\Message\Buffer;
 use type Edgedb\Message\Readable;
 
-class Int16Type extends AbstractType<int> implements Readable
+class Float64Type extends AbstractType<float> implements Readable
 {
     public function write(): string
     {
-        $bytes = \pack('s', $this->getValue());
+        $bytes = \pack('E', $this->getValue());
         return $bytes;
     }
 
     public function getLength(): int
     {
-        return 2;
+        return 8;
     }
 
-    public static function read(Buffer $buffer): Int16Type
+    public static function read(Buffer $buffer): Float64Type
     {
-        $value = $buffer->read(2)
-            |> \unpack('s', $$)[1];
+        $value = $buffer->read(8)
+            |> \unpack('E', $$)[1];
 
         return new self($value);
     }

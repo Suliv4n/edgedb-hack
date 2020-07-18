@@ -2,9 +2,9 @@ namespace Edgedb\Message\Type\Struct;
 
 use type Edgedb\Message\Buffer;
 use type Edgedb\Message\Readable;
-use type Edgedb\Message\Type\Int16Type;
-use type Edgedb\Message\Type\Int32Type;
-use type Edgedb\Message\Type\Int8Type;
+use type Edgedb\Message\Type\UInt16Type;
+use type Edgedb\Message\Type\UInt32Type;
+use type Edgedb\Message\Type\UInt8Type;
 use type Edgedb\Message\Type\StringType;
 use type Edgedb\Message\Type\VectorType;
 use type Edgedb\Protocol\Error;
@@ -16,8 +16,8 @@ class ErrorStruct extends AbstractStruct implements Readable
         private Error $error
     ) {
         parent::__construct(darray[
-            'severity' => new Int8Type($error->getSeverity()),
-            'error_code' => new Int32Type($error->getCode()),
+            'severity' => new UInt8Type($error->getSeverity()),
+            'error_code' => new UInt32Type($error->getCode()),
             'message' => new StringType($error->getMessage()),
             'attributes' => VectorType::fromMapToHeaders($error->getAttributes())
         ]);
@@ -30,14 +30,14 @@ class ErrorStruct extends AbstractStruct implements Readable
 
     public static function read(Buffer $buffer): ErrorStruct
     {
-        $severity = Int8Type::read($buffer)->getValue()
+        $severity = UInt8Type::read($buffer)->getValue()
             |> ErrorSeverityEnum::assert($$);
         
-        $code = Int32Type::read($buffer)->getValue();
+        $code = UInt32Type::read($buffer)->getValue();
 
         $message = StringType::read($buffer)->getValue();
 
-        $attributesCount = Int16Type::read($buffer)->getValue();
+        $attributesCount = UInt16Type::read($buffer)->getValue();
 
         $attributes = darray[];
         for ($i = 0; $i < $attributesCount; $i++) {
