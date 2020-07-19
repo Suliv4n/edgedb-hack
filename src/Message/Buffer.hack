@@ -20,6 +20,14 @@ class Buffer
         return $extract;
     }
 
+    public function readUntilEnd(): string
+    {
+        $extract = Str\slice($this->bytes, $this->cursor);
+        $this->cursor = Str\length($this->bytes);
+
+        return $extract;
+    }
+
     public function setCursor(int $cursor): void
     {
         $this->cursor = $cursor;

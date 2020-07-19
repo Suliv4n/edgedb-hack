@@ -67,5 +67,19 @@ class ScalarCodecs
         $this->registerScalarType('std::float64', new Float64Codec());
 
         $this->registerScalarType('std::bigint', new BigIntCodec());
+
+        $this->registerScalarType('std::bool', new BoolCodec());
+        
+        $this->registerScalarType('std::json', new JsonCodec());
+        $this->registerScalarType('std::str', new StringCodec());
+        $this->registerScalarType('std::bytes', new BytesCodec());
+
+        $this->registerScalarType('std::uuid', new UuidCodec());
+
+        $this->registerScalarType('std::local_date', new LocalDateCodec());
+        $this->registerScalarType('std::local_time', new LocalTimeCodec());
+        $this->registerScalarType('std::local_datetime', new LocalDateTimeCodec());
+        $this->registerScalarType('std::datetime', new DateTimeCodec());
+        $this->registerScalarType('std::duration', new DurationCodec());
     }
 }

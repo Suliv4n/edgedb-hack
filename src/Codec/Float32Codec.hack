@@ -11,7 +11,7 @@ class Float32Codec implements CodecInterface
     public function encode(mixed $value): string
     {
         if (! ($value is float)) {
-            throw new Exception('Expected value to be int');
+            throw new Exception('Expected value to be float');
         }
 
         $encoded = (new UInt32Type(4))->write();

@@ -3,6 +3,7 @@ namespace Edgedb\Message\Type;
 use type Edgedb\Message\Buffer;
 use type Edgedb\Message\Readable;
 use type Edgedb\Message\Type\StringType;
+use type Edgedb\Message\Type\UInt8Type;
 use type Edgedb\Message\Type\UInt16Type;
 use type Edgedb\Message\Type\Struct\HeaderStruct;
 
