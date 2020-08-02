@@ -10,7 +10,7 @@ use type DateInterval;
 use namespace HH\Lib\Str;
 use namespace HH\Lib\Math;
 
-class LocalTimeCodec implements CodecInterface
+class LocalTimeCodec extends ScalarCodec
 {
     public function encode(mixed $value): string
     {

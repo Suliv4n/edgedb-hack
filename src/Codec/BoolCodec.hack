@@ -5,7 +5,7 @@ use type Edgedb\Message\Type\UInt8Type;
 use type Edgedb\Message\Buffer;
 use type Exception;
 
-class BoolCodec implements CodecInterface
+class BoolCodec extends ScalarCodec
 {
     public function encode(mixed $value): string
     {

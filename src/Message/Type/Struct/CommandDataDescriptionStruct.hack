@@ -29,6 +29,26 @@ class CommandDataDescriptionStruct extends AbstractStruct implements Readable
         ]);
     }
 
+    public function getInputTypeDescId(): string
+    {
+        return $this->inputTypedescId;
+    }
+
+    public function getInputTypeDesc(): string
+    {
+        return $this->inputTypedesc;
+    }
+
+    public function getOutputTypeDescId(): string
+    {
+        return $this->outputTypedescId;
+    }
+
+    public function getOutputTypeDesc(): string
+    {
+        return $this->outputTypedesc;
+    }
+
     public static function read(Buffer $buffer): CommandDataDescriptionStruct
     {
         $headersCount = UInt16Type::read($buffer)->getValue();

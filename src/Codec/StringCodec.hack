@@ -8,7 +8,7 @@ use type Exception;
 use namespace HH\Lib\Str;
 use namespace HH\Lib\Vec;
 
-class StringCodec implements CodecInterface
+class StringCodec extends ScalarCodec
 {
     public function encode(mixed $value): string
     {

@@ -53,6 +53,20 @@ class Buffer
         $this->cursor += $length;
     }
 
+    public function getCursor(): int
+    {
+        return $this->cursor;
+    }
+
+    public function extractFromCursor(int $length): Buffer
+    {
+        $sub = Str\slice($this->bytes, $this->cursor, $length);
+
+        $this->bytes = Str\splice($this->bytes, '', $this->cursor, $length);
+
+        return new Buffer($sub);
+    }
+
     public function __toString(): string {
         $string = '<Buffer ';
         

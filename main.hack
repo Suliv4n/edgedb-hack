@@ -9,6 +9,10 @@ function main(): noreturn {
     
     Facebook\AutoloadMap\initialize();
 
+    var_dump(\HH\Lib\Str\splice('abcdefgh', '', 1 , 2));
+
+    die();
+
     $connection = new Client(
         '127.0.0.1',
         5656,

@@ -10,7 +10,7 @@ use type DateInterval;
 use namespace HH\Lib\Str;
 use namespace HH\Lib\Math;
 
-class LocalDateCodec implements CodecInterface
+class LocalDateCodec extends ScalarCodec
 {
     private DateTime $referenceDate;
 

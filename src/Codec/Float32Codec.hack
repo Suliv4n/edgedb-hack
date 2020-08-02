@@ -6,7 +6,7 @@ use type Edgedb\Message\Buffer;
 
 use type Exception;
 
-class Float32Codec implements CodecInterface
+class Float32Codec extends ScalarCodec
 {
     public function encode(mixed $value): string
     {

@@ -40,7 +40,7 @@ class ScalarCodecs
         '00000000000000000000000000000110' => 'std::bigint',
     ];
 
-    public function registerScalarType(string $typename, CodecInterface $codec): void
+    public function registerScalarType(string $typename, ScalarCodec $codec): void
     {
         $id = C\find_key(self::KNOWN_TYPES, (string $type) ==> $type === $typename);
 

@@ -10,7 +10,7 @@ use function unpack;
 use namespace HH\Lib\Str;
 use namespace HH\Lib\Vec;
 
-class JsonCodec implements CodecInterface
+class JsonCodec extends ScalarCodec
 {
     public function encode(mixed $value): string
     {

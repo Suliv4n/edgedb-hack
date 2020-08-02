@@ -10,7 +10,7 @@ use type Exception;
 use namespace HH\Lib\Str;
 use namespace HH\Lib\Math;
 
-class DurationCodec implements CodecInterface
+class DurationCodec extends ScalarCodec
 {
     public function encode(mixed $value): string
     {

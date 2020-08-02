@@ -18,7 +18,6 @@ class UuidType extends AbstractType<string> implements Readable
     public static function read(Buffer $buffer): UuidType 
     {
         $bytes = $buffer->read(16);
-
         return new self($bytes);
     }
 }

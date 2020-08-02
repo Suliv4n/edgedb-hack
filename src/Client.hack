@@ -317,7 +317,25 @@ class Client
 
     private function handleCommandDataDescriptionMessage(CommandDataDescriptionMessage $message): void
     {
-        
+        $content = $message->getValue();
+
+        $inputTypeDescId = $content->getInputTypeDescId();
+        $outputTypeDescId = $content->getOutputTypeDescId();
+
+        for ($i = 0; $i < Str\length($outputTypeDescId); $i++) {
+            echo \ord($outputTypeDescId[$i]) |> \dechex($$) |> Str\pad_left($$, 2, '0');
+        }
+
+        $inCodec = $this->codecRegistery->get($inputTypeDescId);
+        $outCodec = $this->codecRegistery->get($outputTypeDescId);
+
+        if ($inCodec === null) {
+            $inCodec = $this->codecRegistery->buildCodec($content->getInputTypeDesc());
+        }
+
+        if ($outCodec === null) {
+            //$outCodec = $this->codecRegistery->buildCodec($content->getOutputTypeDesc());
+        }
     }
 
     private function executeFlow(dict<string, mixed> $arguments): vec<mixed> {
