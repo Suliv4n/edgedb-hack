@@ -66,4 +66,16 @@ class VectorType<T as AbstractType<mixed>> extends AbstractType<vec<T>>
 
         return new self<HeaderStruct>($headers);
     }
+
+    public static function bytesVectorFromStrings(
+        vec<string> $strings
+    ): VectorType<BytesType> {
+        $bytesVector = vec[];
+
+        foreach ($strings as $string) {
+            $bytesVector[] = new BytesType($string);
+        }
+
+        return new self<BytesType>($bytesVector);
+    }
 }

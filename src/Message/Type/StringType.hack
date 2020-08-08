@@ -28,7 +28,6 @@ class StringType extends AbstractType<string>
     public static function read(Buffer $buffer): StringType
     {
         $length = UInt32Type::read($buffer)->getValue();
-
         $string = $buffer->read($length) |> \utf8_decode($$);
 
         return new self($string);

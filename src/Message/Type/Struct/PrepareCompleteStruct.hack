@@ -24,6 +24,11 @@ class PrepareCompleteStruct extends AbstractStruct implements Readable
         ]);
     }
 
+    public function getCardinality(): CardinalityEnum
+    {
+        return $this->cardinality;
+    }
+
     public function getInputTypedescId(): string
     {
         return $this->inputTypedescId;

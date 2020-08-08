@@ -1,5 +1,8 @@
 namespace Edgedb;
 
+use type Edgedb\Codec\ArgumentsEncoderInterface;
+use type Edgedb\Codec\EmptyTupleCodec;
+use type Edgedb\Codec\CodecInterface;
 use type Edgedb\Authentication\AuthenticationStatusEnum;
 use type Edgedb\Authentication\AuthenticatorFactory;
 use type Edgedb\Buffer\Message;
@@ -23,6 +26,7 @@ use type Edgedb\Message\Server\CommandCompleteMessage;
 use type Edgedb\Message\Server\PrepareCompleteMessage;
 use type Edgedb\Message\Server\ReadyForCommandMessage;
 use type Edgedb\Message\Server\ServerHandshakeMessage;
+use type Edgedb\Message\Server\DataMessage;
 use type Edgedb\Message\Server\CommandDataDescriptionMessage;
 use type Edgedb\Message\Type\Struct\AuthenticationRequiredSASLStruct;
 use type Edgedb\Message\Type\Struct\ClientHandshakeStruct;
@@ -45,11 +49,18 @@ use function get_class;
 
 class Client
 {
+    const type QueryTypeDescription = shape(
+        'cardinality' => CardinalityEnum,
+        'inCodec' => CodecInterface,
+        'outCodec' => CodecInterface 
+    ); 
+
     private Socket $socket;
     private Reader $reader;
     private bool $isOperationInProgress = false;
     private ?TransactionTypeEnum $serverTransactionStatus = null;
     private CodecRegistery $codecRegistery;
+    private ?string $lastStatus; 
 
     public function __construct(
         string $host,
@@ -154,12 +165,12 @@ class Client
     {
         $this->beginOperation();
         try {
-            $this->fetch($query, $arguments, false, false);
+            $result = $this->fetch($query, $arguments, false, false);
         } finally {
             $this->endOperation();
         }
 
-        return null;
+        return $result;
     }
 
 
@@ -202,7 +213,7 @@ class Client
                     get_class($responseMessageContent)
                 );
 
-                $status = $responseMessageContent->getStatus();
+                $this->lastStatus = $responseMessageContent->getStatus();
             } else if ($responseMessage->getType() === MessageTypeEnum::READY_FOR_COMMAND) {
                 invariant(
                     $responseMessageContent is ReadyForCommandStruct,
@@ -226,17 +237,23 @@ class Client
         bool $asJson,
         bool $expectOne
     ): mixed {
-        $this->parse($query, $asJson, $expectOne);
-        //$this->executeFlow($arguments);
+        $queryTypeDescription = $this->parse($query, $asJson, $expectOne);
 
-        return null;
+        $this->validateFetchCardinality($expectOne, $queryTypeDescription['cardinality']);
+        $result = $this->executeFlow(
+            $arguments,
+            $queryTypeDescription['inCodec'],
+            $queryTypeDescription['outCodec'] 
+        );
+
+        return $result;
     }
 
     private function parse(
         string $query,
         bool $asJson,
         bool $expectOne
-    ): mixed {
+    ): self::QueryTypeDescription {
         $prepareMessage = new PrepareMessage(
             new PrepareStruct(
                 vec[],
@@ -251,7 +268,7 @@ class Client
         $responseBuffer = $this->socket->receive();
 
         $parsing = true;
-
+        $queryTypeDescription = null;
         while ($parsing) {
             if ($responseBuffer->isConsumed()) {
                 $responseBuffer = $this->socket->receive();
@@ -260,7 +277,7 @@ class Client
             $responseMessage = $this->reader->read($responseBuffer);
             
             if ($responseMessage is PrepareCompleteMessage) {
-                $this->handlePrepareCompleteMessage($responseMessage);
+                $queryTypeDescription = $this->handlePrepareCompleteMessage($responseMessage);
             } else if ($responseMessage is ReadyForCommandMessage) {
                 $this->serverTransactionStatus = $responseMessage->getValue()->getTransactionState();
                 $parsing = false;
@@ -269,19 +286,29 @@ class Client
             $responseBuffer->sliceFromCursor();
         }
 
-        return null;
+        invariant($queryTypeDescription !== null, 'QueryTypeDescription can not be null');
+
+        return $queryTypeDescription;
     }
 
-    private function handlePrepareCompleteMessage(PrepareCompleteMessage $message): void
+    private function handlePrepareCompleteMessage(PrepareCompleteMessage $message): self::QueryTypeDescription
     {
+        $queryDescriptionsType = null;
+
         $inTypedesc = $message->getValue()->getInputTypedescId();
         $outTypedesc = $message->getValue()->getOutputTypedescId();
 
         $inCodec =  $this->codecRegistery->get($inTypedesc);
         $outCodec = $this->codecRegistery->get($outTypedesc);
 
-        if ($inCodec === null || $outCodec === null)
-        {
+        if ($outCodec !== null && $inCodec !== null) {
+            $queryDescriptionsType = shape(
+                'cardinality' => $message->getValue()->getCardinality(),
+                'inCodec' => $inCodec,
+                'outCodec' => $outCodec
+            );
+        }
+        else {
             $describeStatementMessage = new DescribeStatementMessage(
                 new DescribeStatementStruct(
                     vec[],
@@ -295,7 +322,7 @@ class Client
 
             $responseMessageBuffer = $this->socket->receive();
             
-
+            $queryDescriptionsType = null;
             while ($parsing) {
                 if ($responseMessageBuffer->isConsumed()) {
                     $responseMessageBuffer = $this->socket->receive();
@@ -304,7 +331,7 @@ class Client
                 $responseMessage = $this->reader->read($responseMessageBuffer);
 
                 if ($responseMessage is CommandDataDescriptionMessage) {
-                    $this->handleCommandDataDescriptionMessage($responseMessage);
+                    $queryDescriptionsType = $this->handleCommandDataDescriptionMessage($responseMessage);
                 } else if ($responseMessage is ReadyForCommandMessage) {
                     $this->serverTransactionStatus = $responseMessage->getValue()->getTransactionState();
                     $parsing = false;
@@ -313,46 +340,124 @@ class Client
                 $responseMessageBuffer->sliceFromCursor();
             }
         }
+
+
+        if ($queryDescriptionsType is null) {
+            throw new \Exception('failed to receive type information in response to a Parse message');
+        }
+
+        return $queryDescriptionsType;
     }
 
-    private function handleCommandDataDescriptionMessage(CommandDataDescriptionMessage $message): void
-    {
+    private function handleCommandDataDescriptionMessage(
+        CommandDataDescriptionMessage $message
+    ): self::QueryTypeDescription {
         $content = $message->getValue();
 
         $inputTypeDescId = $content->getInputTypeDescId();
         $outputTypeDescId = $content->getOutputTypeDescId();
-
-        for ($i = 0; $i < Str\length($outputTypeDescId); $i++) {
-            echo \ord($outputTypeDescId[$i]) |> \dechex($$) |> Str\pad_left($$, 2, '0');
-        }
 
         $inCodec = $this->codecRegistery->get($inputTypeDescId);
         $outCodec = $this->codecRegistery->get($outputTypeDescId);
 
         if ($inCodec === null) {
             $inCodec = $this->codecRegistery->buildCodec($content->getInputTypeDesc());
-        }
+        }   
 
         if ($outCodec === null) {
-            //$outCodec = $this->codecRegistery->buildCodec($content->getOutputTypeDesc());
+            $outCodec = $this->codecRegistery->buildCodec($content->getOutputTypeDesc());
+        }
+
+        return shape(
+            "cardinality" => $content->getCardinality(),
+            "inCodec" => $inCodec,
+            "outCodec" => $outCodec
+        );
+    }
+
+    private function validateFetchCardinality(bool $expectOne, CardinalityEnum $fetchCardinality): void {
+        if ($expectOne && $fetchCardinality === CardinalityEnum::NO_RESULT) {
+            throw new \Exception("Query executed via fetchOne*() returned no data.");
         }
     }
 
-    private function executeFlow(dict<string, mixed> $arguments): vec<mixed> {
+    private function executeFlow(
+        dict<string, mixed> $arguments,
+        CodecInterface $inCodec,
+        CodecInterface $outCodec
+    ): vec<mixed> {
         $result = vec[];
 
-        /*$executeMessage = new PrepareMessage(
-            new PrepareStruct(
-                vec[],
-                '',
-                ''
-            )
+        $encodedArguments = $this->encodeArguments($arguments, $inCodec);
+
+        $executeMessage = new ExecuteMessage(
+            new ExecuteStruct(vec[], '', $encodedArguments)
         );
 
-        $this->socket->sendMessage($executeMessage);
-        */
+        $this->socket->sendMessage($executeMessage, new SynchMessage());
+
+        $parsing = true;
+
+        $responseBuffer = $this->socket->receive();
+        
+        $result = vec[];
+        $i = 0;
+        while ($parsing) {
+            if ($responseBuffer->isConsumed()) {
+                $responseBuffer = $this->socket->receive();
+            }
+
+            $responseMessage = $this->reader->read($responseBuffer);
+
+            if ($responseMessage is DataMessage) {
+                $result = Vec\concat(
+                    $result,
+                    $this->handleDataMessage($responseMessage, $outCodec)
+                );
+            } else if ($responseMessage is CommandCompleteMessage) {
+                $this->lastStatus = $responseMessage->getValue()->getStatus();
+            } 
+            else if ($responseMessage is ReadyForCommandMessage) {
+                $this->serverTransactionStatus = $responseMessage->getValue()->getTransactionState();
+                $parsing = false;
+            }
+
+            $responseBuffer->sliceFromCursor();
+        }
 
         return $result;
+    }
+
+    private function encodeArguments(
+        dict<string, mixed> $arguments, 
+        CodecInterface $codec
+    ): string {
+        if ($codec is EmptyTupleCodec) {
+            return EmptyTupleCodec::getBytes();
+        }
+
+        if (! ($codec is  ArgumentsEncoderInterface)) {
+            throw new \Exception('Can not encode arguments with given input codec.');
+        }
+
+        return $codec->encodeArguments($arguments);
+    }
+
+    private function handleDataMessage(
+        DataMessage $dataMessage,
+        CodecInterface $outCodec,
+    ): vec<mixed> {
+        $content = $dataMessage->getValue();
+
+        $encodedDataSet = $content->getEncodedData();
+        $decodedData = vec[];
+        foreach ($encodedDataSet as $encodedData) {
+            $decodedData[] = $outCodec->decode(
+                new Buffer($encodedData)
+            );
+        }
+
+        return $decodedData;
     }
 
     private function endOperation(): void

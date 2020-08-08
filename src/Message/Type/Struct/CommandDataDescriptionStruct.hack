@@ -49,6 +49,11 @@ class CommandDataDescriptionStruct extends AbstractStruct implements Readable
         return $this->outputTypedesc;
     }
 
+    public function getCardinality(): CardinalityEnum
+    {
+        return $this->cardinality;
+    }
+
     public static function read(Buffer $buffer): CommandDataDescriptionStruct
     {
         $headersCount = UInt16Type::read($buffer)->getValue();

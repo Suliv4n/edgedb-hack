@@ -1,17 +1,18 @@
 namespace Edgedb\Message;
 
+use type Edgedb\Exception\ServerErrorException;
+use type Edgedb\Exception\UnexpectedMessageTypeException;
 use type Edgedb\Message\AbstractMessage;
-use type Edgedb\Message\Server\ErrorMessage;
-use type Edgedb\Message\Type\Struct\AbstractStruct;
-use type Edgedb\Message\Type\CharType;
-use type Edgedb\Message\Server\ServerHandshakeMessage;
 use type Edgedb\Message\Server\AuthenticationMessage;
 use type Edgedb\Message\Server\CommandCompleteMessage;
-use type Edgedb\Message\Server\ReadyForCommandMessage;
 use type Edgedb\Message\Server\CommandDataDescriptionMessage;
+use type Edgedb\Message\Server\DataMessage;
+use type Edgedb\Message\Server\ErrorMessage;
 use type Edgedb\Message\Server\PrepareCompleteMessage;
-use type Edgedb\Exception\UnexpectedMessageTypeException;
-use type Edgedb\Exception\ServerErrorException;
+use type Edgedb\Message\Server\ReadyForCommandMessage;
+use type Edgedb\Message\Server\ServerHandshakeMessage;
+use type Edgedb\Message\Type\CharType;
+use type Edgedb\Message\Type\Struct\AbstractStruct;
 
 class Reader
 {
@@ -43,6 +44,8 @@ class Reader
                 return PrepareCompleteMessage::read($buffer);
             case MessageTypeEnum::COMMAND_DATA_DESCRIPTION:
                 return CommandDataDescriptionMessage::read($buffer);
+            case MessageTypeEnum::DATA:
+                return DataMessage::read($buffer);
             default:
                 throw new \Exception('Unknown message type ' . $messageType . '.');
         }

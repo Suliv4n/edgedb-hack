@@ -19,10 +19,7 @@ class EmptyTupleCodec implements CodecInterface
             throw new Exception('Expected 0 elements in value.');
         }
 
-        $encoded = (new Int32Type(4))->write();
-        $encoded .= (new Int32Type(0))->write();
-
-        return $encoded;
+       return  self::getBytes();
     }
     
     public function decode(Buffer $buffer): mixed
@@ -34,5 +31,11 @@ class EmptyTupleCodec implements CodecInterface
         }
 
         return vec[];
+    }
+
+    public static function getBytes(): string {
+        $encoded = (new Int32Type(0))->write();
+
+        return $encoded;
     }
 }

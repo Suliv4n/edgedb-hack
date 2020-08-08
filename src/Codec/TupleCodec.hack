@@ -8,7 +8,7 @@ use type Exception;
 use namespace HH\Lib\Str;
 use namespace HH\Lib\C;
 
-class TupleCodec implements CodecInterface
+class TupleCodec implements CodecInterface, ArgumentsEncoderInterface
 {
     public function __construct(
         private vec<CodecInterface> $subCodecs
@@ -49,5 +49,50 @@ class TupleCodec implements CodecInterface
         }
 
         return $decoded;
+    }
+
+    public function encodeArguments(mixed $arguments): string
+    {
+        if (! ($arguments is vec<_>)) {
+            throw new Exception('Expected arguments to be vec.');
+        }
+
+        $codecsCount = C\count($this->subCodecs);
+
+        if ($codecsCount !== C\count($arguments)) {
+            throw new Exception(
+                Str\format(
+                    'Expected %d argument%s, but got %d.',
+                    $codecsCount,
+                    $codecsCount === 1 ? '' : 's',
+                    C\count($arguments)
+                )
+            );
+        }
+
+        if ($codecsCount === 0) {
+            return EmptyTupleCodec::getBytes();
+        }
+
+        $elementsData = '';
+
+        for ($i = 0; $i < $codecsCount; $i++) { 
+            $argument = $arguments[$i];
+
+            $elementsData .= (new Int32Type(0))->write(); // Reserved
+
+            if ($argument === null) {
+                $elementsData .= (new Int32Type(-1))->write();
+            } else {
+                $codec = $this->subCodecs[$i];
+                $elementsData .= $codec->encode($argument);
+            }
+        }
+
+        $encoded = (new Int32Type(4 + Str\length($elementsData)))->write();
+        $encoded .= (new Int32Type($codecsCount))->write();
+        $encoded .= $elementsData;
+
+        return $encoded;
     }
 }

@@ -60,11 +60,15 @@ class Buffer
 
     public function extractFromCursor(int $length): Buffer
     {
-        $sub = Str\slice($this->bytes, $this->cursor, $length);
+        $extract = "";
 
-        $this->bytes = Str\splice($this->bytes, '', $this->cursor, $length);
+        for ($i = $this->cursor; $i < $this->cursor + $length; $i++) {
+            $extract .= $this->bytes[$i];
+        }
 
-        return new Buffer($sub);
+        $this->cursor += $length;
+
+        return new Buffer($extract);
     }
 
     public function __toString(): string {

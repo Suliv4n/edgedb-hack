@@ -20,4 +20,5 @@ enum MessageTypeEnum: string as string
     READY_FOR_COMMAND = 'Z';
     PREPARE_COMPLETE = '1';
     COMMAND_DATA_DESCRIPTION = 'T';
+    DATA = 'D';
 }
