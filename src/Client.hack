@@ -153,12 +153,12 @@ class Client
     {
         $this->beginOperation();
         try {
-            $this->fetch($query, $arguments, false, true);
+            $result = $this->fetch($query, $arguments, false, true);
         } finally {
             $this->endOperation();
         }
 
-        return null;
+        return $result[0];
     }
 
     public function fetchMany(string $query, dict<string, mixed> $arguments = dict[]): mixed
@@ -172,7 +172,6 @@ class Client
 
         return $result;
     }
-
 
     private function beginOperation(): void
     {
@@ -236,7 +235,7 @@ class Client
         dict<string, mixed> $arguments,
         bool $asJson,
         bool $expectOne
-    ): mixed {
+    ): vec<mixed> {
         $queryTypeDescription = $this->parse($query, $asJson, $expectOne);
 
         $this->validateFetchCardinality($expectOne, $queryTypeDescription['cardinality']);
