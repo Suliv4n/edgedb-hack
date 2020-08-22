@@ -38,4 +38,8 @@ class EmptyTupleCodec implements CodecInterface
 
         return $encoded;
     }
+
+    public function getTypeId(): string {
+        return '000000000000-0000-0000-0000000000ff';
+    }
 }

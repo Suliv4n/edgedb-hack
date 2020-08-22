@@ -24,4 +24,9 @@ class Int64Codec extends ScalarCodec
     {
         return Int64Type::read($buffer)->getValue();
     }
+
+    public function getTypeId(): string
+    {
+        return '000000000000-0000-0000-000000000105';
+    }
 }

@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "hhvm/hhvm-autoload",
-            "version": "v3.1.1",
+            "version": "v3.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hhvm/hhvm-autoload.git",
-                "reference": "959faf03dc8a6ef9101668faece1c50f6fafd867"
+                "reference": "44a25975c233ab224f9f8efe0b87448680f30cab"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hhvm/hhvm-autoload/zipball/959faf03dc8a6ef9101668faece1c50f6fafd867",
-                "reference": "959faf03dc8a6ef9101668faece1c50f6fafd867",
+                "url": "https://api.github.com/repos/hhvm/hhvm-autoload/zipball/44a25975c233ab224f9f8efe0b87448680f30cab",
+                "reference": "44a25975c233ab224f9f8efe0b87448680f30cab",
                 "shasum": ""
             },
             "require": {
@@ -51,7 +51,7 @@
                 ]
             },
             "notification-url": "https://packagist.org/downloads/",
-            "time": "2020-05-20T16:38:40+00:00"
+            "time": "2020-07-29T17:08:27+00:00"
         },
         {
             "name": "hhvm/hsl",
@@ -129,16 +129,16 @@
         },
         {
             "name": "facebook/fbexpect",
-            "version": "v2.7.4",
+            "version": "v2.7.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hhvm/fbexpect.git",
-                "reference": "02a831d27bc928460c1407e0d48d02d339b03798"
+                "reference": "62e2c39741e1c86c373da3ab75617dbedfaed419"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hhvm/fbexpect/zipball/02a831d27bc928460c1407e0d48d02d339b03798",
-                "reference": "02a831d27bc928460c1407e0d48d02d339b03798",
+                "url": "https://api.github.com/repos/hhvm/fbexpect/zipball/62e2c39741e1c86c373da3ab75617dbedfaed419",
+                "reference": "62e2c39741e1c86c373da3ab75617dbedfaed419",
                 "shasum": ""
             },
             "require": {
@@ -157,7 +157,7 @@
                 "MIT"
             ],
             "description": "Unit test helpers for Facebook projects",
-            "time": "2020-04-23T03:58:41+00:00"
+            "time": "2020-07-29T17:03:08+00:00"
         },
         {
             "name": "facebook/hh-clilib",
@@ -281,20 +281,20 @@
         },
         {
             "name": "hhvm/type-assert",
-            "version": "v4.1.0",
+            "version": "v4.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hhvm/type-assert.git",
-                "reference": "2fb1dabb866ccedaa2ab97ed4c15cafda195f57b"
+                "reference": "5a3f38299750c8e4409facf2fcf04873180da2c0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hhvm/type-assert/zipball/2fb1dabb866ccedaa2ab97ed4c15cafda195f57b",
-                "reference": "2fb1dabb866ccedaa2ab97ed4c15cafda195f57b",
+                "url": "https://api.github.com/repos/hhvm/type-assert/zipball/5a3f38299750c8e4409facf2fcf04873180da2c0",
+                "reference": "5a3f38299750c8e4409facf2fcf04873180da2c0",
                 "shasum": ""
             },
             "require": {
-                "hhvm": "^4.63",
+                "hhvm": "^4.64",
                 "hhvm/hsl": "^4.0"
             },
             "require-dev": {
@@ -318,7 +318,7 @@
                 "TypeAssert",
                 "hack"
             ],
-            "time": "2020-06-23T18:05:48+00:00"
+            "time": "2020-07-29T19:34:37+00:00"
         }
     ],
     "aliases": [],

@@ -14,6 +14,7 @@ class NamedTupleCodec implements CodecInterface, ArgumentsEncoderInterface
     private keyset<string> $namesSet;
 
     public function __construct(
+        private string $typeId,
         private vec<CodecInterface> $subCodecs,
         private vec<string> $names
     ) {
@@ -115,5 +116,10 @@ class NamedTupleCodec implements CodecInterface, ArgumentsEncoderInterface
         $encoded .= $elementsData;
 
         return $encoded;
+    }
+
+    public function getTypeId(): string
+    {
+        return $this->typeId;
     }
 }

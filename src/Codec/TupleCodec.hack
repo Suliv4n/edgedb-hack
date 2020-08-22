@@ -11,6 +11,7 @@ use namespace HH\Lib\C;
 class TupleCodec implements CodecInterface, ArgumentsEncoderInterface
 {
     public function __construct(
+        private string $typeId,
         private vec<CodecInterface> $subCodecs
     ) {}
 
@@ -94,5 +95,10 @@ class TupleCodec implements CodecInterface, ArgumentsEncoderInterface
         $encoded .= $elementsData;
 
         return $encoded;
+    }
+
+    public function getTypeId(): string
+    {
+        return $this->typeId;
     }
 }

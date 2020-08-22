@@ -427,6 +427,18 @@ class Client
         return $result;
     }
 
+    private function pptimisticExecuteFlow(
+        dict<string, mixed> $arguments,
+        bool $asJson,
+        CodecInterface $inCodec,
+        CodecInterface $outCodec,
+        string $query
+    ): vec<mixed> {
+        $results = vec[];
+
+        return $results;
+    }
+
     private function encodeArguments(
         dict<string, mixed> $arguments, 
         CodecInterface $codec

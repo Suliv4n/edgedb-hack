@@ -67,4 +67,9 @@ class LocalDateTimeCodec extends ScalarCodec
 
         return $localDatetime;
     }
+
+    public function getTypeId(): string
+    {
+        return '000000000000-0000-0000-00000000010b';
+    }
 }

@@ -27,4 +27,9 @@ class BigIntCodec extends ScalarCodec
     {
         return BigIntStruct::read($buffer)->getInt();
     }
+
+    public function getTypeId(): string
+    {
+        return '000000000000-0000-0000-000000000110';
+    }
 }

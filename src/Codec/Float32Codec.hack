@@ -24,4 +24,9 @@ class Float32Codec extends ScalarCodec
     {
         return Float32Type::read($buffer)->getValue();
     }
+
+    public function getTypeId(): string
+    {
+        return '000000000000-0000-0000-000000000106';
+    }
 }

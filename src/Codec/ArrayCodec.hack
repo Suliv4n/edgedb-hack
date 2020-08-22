@@ -13,6 +13,7 @@ class ArrayCodec implements CodecInterface
     const int MAX_LENGTH = 0x7fffffff;
 
     public function __construct(
+        private string $typeId,
         private CodecInterface $subCodec,
         private int $length
     ) {}
@@ -98,5 +99,10 @@ class ArrayCodec implements CodecInterface
         }
 
         return $decoded;
+    }
+
+    public function getTypeId(): string
+    {
+        return $this->typeId;
     }
 }

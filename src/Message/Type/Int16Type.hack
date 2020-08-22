@@ -3,12 +3,11 @@ namespace Edgedb\Message\Type;
 use Edgedb\Message\Buffer;
 use type Edgedb\Message\Readable;
 
-class Int16Type extends AbstractType<int> implements Readable
+class Int16Type extends AbstractSignedIntType implements Readable
 {
     public function write(): string
     {
-        $bytes = \pack('s', $this->getValue());
-        return $bytes;
+        return $this->toBytes(16);
     }
 
     public function getLength(): int
@@ -18,8 +17,9 @@ class Int16Type extends AbstractType<int> implements Readable
 
     public static function read(Buffer $buffer): Int16Type
     {
-        $value = $buffer->read(2)
-            |> \unpack('s', $$)[1];
+        $bytes = $buffer->read(2);
+
+        $value = parent::toInt($bytes);
 
         return new self($value);
     }

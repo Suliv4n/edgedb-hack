@@ -11,6 +11,7 @@ use namespace HH\Lib\C;
 class ObjectCodec implements CodecInterface
 {
     public function __construct(
+        private string $typeId,
         private vec<CodecInterface> $subCodecs,
         private vec<string> $names,
         private vec<int> $flags
@@ -52,5 +53,10 @@ class ObjectCodec implements CodecInterface
         }
 
         return $decoded;
+    }
+
+    public function getTypeId(): string
+    {
+        return $this->typeId;
     }
 }

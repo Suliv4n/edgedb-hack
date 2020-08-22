@@ -64,4 +64,9 @@ class DurationCodec extends ScalarCodec
 
         return new DateInterval($intervalString);
     }
+
+    public function getTypeId(): string
+    {
+        return '000000000000-0000-0000-00000000010e';
+    }
 }

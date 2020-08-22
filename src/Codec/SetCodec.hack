@@ -11,6 +11,7 @@ use namespace HH\Lib\C;
 class SetCodec implements CodecInterface
 {
     public function __construct(
+        private string $typeId,
         private CodecInterface $subCodec
     ) {}
 
@@ -102,5 +103,10 @@ class SetCodec implements CodecInterface
         }
 
         return $decoded;
+    }
+
+    public function getTypeId(): string
+    {
+        return $this->typeId;
     }
 }

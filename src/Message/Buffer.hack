@@ -2,6 +2,9 @@ namespace Edgedb\Message;
 
 use type Exception;
 
+use function hexdec;
+use function chr;
+
 use namespace HH\Lib\Str;
 
 class Buffer
@@ -71,18 +74,31 @@ class Buffer
         return new Buffer($extract);
     }
 
-    public function __toString(): string {
-        $string = '<Buffer ';
-        
-        $hexa = vec[];
+    public static function fromBase16(string $hex): Buffer
+    {
+        $bytesHex = $hex 
+            |> Str\replace($$, ' ', '')
+            |> Str\chunk($$, 2);
+
+        $bytes = '';
+        foreach ($bytesHex as $byteHex) {
+            $bytes .= $byteHex
+                |> hexdec($$)
+                |> chr($$);
+        }
+
+        return new self($bytes);
+    }
+
+    public function toBase16(): string
+    {
+        $hexa = '';
         for ($i = 0; $i < Str\length($this->bytes); $i++) {
-            $hexa[] = \ord($this->bytes[$i]) 
+            $hexa .= \ord($this->bytes[$i]) 
                 |> \dechex($$) 
                 |> \str_pad($$, 2, '0', \STR_PAD_LEFT);
         }
-        
-        $string .= \implode(' ', $hexa) . '>';
-        
-        return $string;
+
+        return $hexa;
     }
 }

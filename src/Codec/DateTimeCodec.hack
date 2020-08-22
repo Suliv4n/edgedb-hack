@@ -18,4 +18,9 @@ class DateTimeCodec extends LocalDateTimeCodec
         parent::__construct();
         $this->referenceDatetime->setTimezone(new DateTimeZone('UTC'));
     }
+
+    public function getTypeId(): string
+    {
+        return '000000000000-0000-0000-00000000010a';
+    }
 }

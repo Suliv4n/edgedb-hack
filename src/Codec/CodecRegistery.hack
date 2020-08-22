@@ -136,7 +136,7 @@ class CodecRegistery
                 $codec = $this->scalarCodecs->get($typeId) ?? null;
                 
                 if ($codec === null) {
-                    throw new Exception('No codec.');
+                    throw new Exception("No codec for type {$typeId}.");
                 }
                 
                 break;
@@ -164,7 +164,7 @@ class CodecRegistery
                     $flags[] = $flag;
                 }
 
-                $codec = new ObjectCodec($subCodecs, $names, $flags);
+                $codec = new ObjectCodec($typeId, $subCodecs, $names, $flags);
                 break;
 
             case TypeEnum::TYPE_SET:
@@ -175,7 +175,7 @@ class CodecRegistery
                     throw new Exception('Could not build set codec: missing subcodec');
                 }
 
-                $codec = new SetCodec($subCodec);
+                $codec = new SetCodec($typeId, $subCodec);
                 break;
 
             case TypeEnum::TYPE_SCALAR:
@@ -212,7 +212,7 @@ class CodecRegistery
                     throw new Exception('Could not build array codec: missing subcodec');
                 }
 
-                $codec = new ArrayCodec($subCodec, $dimensionLength);
+                $codec = new ArrayCodec($typeId, $subCodec, $dimensionLength);
                 break;
 
             case TypeEnum::TYPE_TUPLE:
@@ -233,7 +233,7 @@ class CodecRegistery
                         $subCodecs[] = $codecs[$position];
                     }
 
-                    $codec = new TupleCodec($subCodecs);
+                    $codec = new TupleCodec($typeId, $subCodecs);
                 }
 
                 break;
@@ -256,7 +256,7 @@ class CodecRegistery
                     $subCodecs[] = $subCodec;
                 }
 
-                $codec = new NamedTupleCodec($subCodecs, $names);
+                $codec = new NamedTupleCodec($typeId, $subCodecs, $names);
 
                 break;
                 case TypeEnum::TYPE_ENUM:

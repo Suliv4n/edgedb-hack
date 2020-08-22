@@ -25,4 +25,9 @@ class BoolCodec extends ScalarCodec
             ? false
             : true;
     }
+
+    public function getTypeId(): string
+    {
+        return '000000000000-0000-0000-000000000109';
+    }
 }
