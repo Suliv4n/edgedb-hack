@@ -1,25 +1,23 @@
 namespace Edgedb\Message\Type;
 
-use Edgedb\Message\Buffer;
+use type Edgedb\Message\Buffer;
 use type Edgedb\Message\Readable;
 
-class Float64Type extends AbstractType<float> implements Readable
+class Float64Type extends AbstractFloatType implements Readable
 {
     public function write(): string
     {
-        $bytes = \pack('E', $this->getValue());
-        return $bytes;
+        return parent::toBytes(64, 11);
     }
 
     public function getLength(): int
     {
-        return 8;
+        return 4;
     }
 
     public static function read(Buffer $buffer): Float64Type
     {
-        $value = $buffer->read(8)
-            |> \unpack('E', $$)[1];
+        $value = parent::toFloat($buffer->read(4), 11);
 
         return new self($value);
     }
