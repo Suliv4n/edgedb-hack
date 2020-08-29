@@ -20,12 +20,14 @@ class UuidType extends AbstractType<string> implements Readable
         $bytes = '';
 
         for ($i = 0; $i < 16; $i++) {
-            $bytes .= Str\slice($uuidHex, $i*2, 2)
+            $byte = Str\slice($uuidHex, $i*2, 2)
              |> hexdec($$)
              |> chr($$);
+
+            $bytes .= $byte;
         }
 
-        return $this->getValue();
+        return $bytes;
     }
 
     public function getLength(): int

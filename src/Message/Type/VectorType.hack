@@ -48,14 +48,6 @@ class VectorType<T as AbstractType<mixed>> extends AbstractType<vec<T>>
         return $length;
     }
 
-    public static function fromStringVector(
-        vec<string> $strings,
-        bool $useLongIntForCount = false
-    ): VectorType<StringType> {
-        $wrappedString = Vec\map<string, StringType>($strings, ($string) ==> new StringType($string));
-        return new VectorType($wrappedString, $useLongIntForCount);
-    }
-
     public static function fromMapToHeaders(
         darray<int, string> $map
     ): VectorType<HeaderStruct> {

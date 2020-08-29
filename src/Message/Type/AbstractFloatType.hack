@@ -14,6 +14,10 @@ abstract class AbstractFloatType extends AbstractType<float>
 {
     protected function toBytes(int $bitsCount, int $exponentBitsCount): string
     {
+        if ($this->getValue() === .0) {
+            return Str\repeat(chr(0), Math\int_div($bitsCount, 8));
+        }
+
         $bin = $this->getValue() >= 0 ? '0' : '1';
 
         $absluteValue = Math\abs($this->getValue());
@@ -38,12 +42,13 @@ abstract class AbstractFloatType extends AbstractType<float>
         } else {
             $exponent = -(Str\search($decimalBin, '1') ?? 0) - 1;
             $fraction = Str\trim_left($decimalBin, '0')
+                |> Str\pad_right($$, $bitsCount - $exponentBitsCount, '0')
                 |> Str\slice($$, 1);
         }
 
         $fraction = Str\slice($fraction, 0, $bitsCount - $exponentBitsCount - 1);
 
-        $exponent += 127;
+        $exponent += 2 ** ($exponentBitsCount - 1) - 1;
         $exponentBin = decbin($exponent)
             |> Str\pad_left($$, $exponentBitsCount, '0');
 
@@ -75,7 +80,7 @@ abstract class AbstractFloatType extends AbstractType<float>
 
         $sign = $bin[0] === '0' ? 1 : -1;
         $exponent = Str\slice($bin, 1, $exponentBitsCount)
-            |> bindec($$) - 127;
+            |> bindec($$) - (2 ** ($exponentBitsCount - 1) - 1);
         $fraction = Str\slice($bin, $exponentBitsCount + 1)
             |> Str\trim_right($$, '0');
 

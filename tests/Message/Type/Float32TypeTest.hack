@@ -22,6 +22,10 @@ class Float32TypeTest extends HackTest {
 
     public function testWrite(): void 
     {
+        $float = new Float32Type(.0);
+        $buffer = new Buffer($float->write());
+        expect($buffer->toBase16())->toBeSame('00000000');
+
         $float = new Float32Type(-15.625);
         $buffer = new Buffer($float->write());
         expect($buffer->toBase16())->toBeSame('c17a0000');

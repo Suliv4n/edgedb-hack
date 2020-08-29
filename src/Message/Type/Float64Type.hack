@@ -17,7 +17,7 @@ class Float64Type extends AbstractFloatType implements Readable
 
     public static function read(Buffer $buffer): Float64Type
     {
-        $value = parent::toFloat($buffer->read(4), 11);
+        $value = parent::toFloat($buffer->read(8), 11);
 
         return new self($value);
     }

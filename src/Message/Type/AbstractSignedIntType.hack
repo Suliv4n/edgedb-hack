@@ -32,10 +32,19 @@ abstract class AbstractSignedIntType extends AbstractType<int>
                 $binA2 .= $bin[$i] === '1' ? '0' : '1';
             }
 
-            $decA2 = bindec($binA2) + 1;
-            
-            $binA2 = decbin($decA2) 
-                |> Str\pad_left($$, $bitsCount, '0');
+            $i = Str\length($bin) - 1;
+            $retain = 0;
+            do {
+                $binA2[$i] = $binA2[$i] === '1' ? '0' : '1';
+
+                if ($binA2[$i] === '0') {
+                    $retain = 1;
+                } else {
+                    $retain = 0;
+                }
+
+                $i--;
+            } while($i >= 0 && $retain === 1);
 
             $bytes = C\reduce(
                 Str\chunk($binA2, 8),

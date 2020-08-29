@@ -9,7 +9,7 @@ class StringType extends AbstractType<string>
 {
     public function write(): string
     {
-        $utf8Value = \utf8_encode($this->getValue());
+        $utf8Value = $this->getValue();
         $length = Str\length($utf8Value);
         
         $length = new UInt32Type($length);
@@ -28,7 +28,7 @@ class StringType extends AbstractType<string>
     public static function read(Buffer $buffer): StringType
     {
         $length = UInt32Type::read($buffer)->getValue();
-        $string = $buffer->read($length) |> \utf8_decode($$);
+        $string = $buffer->read($length);
 
         return new self($string);
     }
