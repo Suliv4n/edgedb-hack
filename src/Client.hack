@@ -40,6 +40,7 @@ use type Edgedb\Message\Type\Struct\PrepareStruct;
 use type Edgedb\Message\Type\Struct\ReadyForCommandStruct;
 use type Edgedb\Protocol\Version;
 use type Edgedb\TransactionTypeEnum;
+use type Edgedb\Protocol\Handshaker;
 
 use namespace HH\Lib\Str;
 use namespace HH\Lib\Vec;
@@ -52,15 +53,15 @@ class Client
     const type QueryTypeDescription = shape(
         'cardinality' => CardinalityEnum,
         'inCodec' => CodecInterface,
-        'outCodec' => CodecInterface 
-    ); 
+        'outCodec' => CodecInterface
+    );
 
     private Socket $socket;
     private Reader $reader;
     private bool $isOperationInProgress = false;
     private ?TransactionTypeEnum $serverTransactionStatus = null;
     private CodecRegistery $codecRegistery;
-    private ?string $lastStatus; 
+    private ?string $lastStatus;
 
     public function __construct(
         string $host,
@@ -75,67 +76,30 @@ class Client
         $this->codecRegistery = new CodecRegistery();
     }
 
+    public function getDatabase(): string
+    {
+        return $this->database;
+    }
+
+    public function getUsername(): string
+    {
+        return $this->username;
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
     public function getSocket(): Socket
     {
         return $this->socket;
     }
 
-    public function connect(): void 
+    public function connect(): void
     {
-        $this->handshake();
-    }
-
-    private function handshake(): void 
-    {
-        $clientVersion = new Version(0, 7);
-        $handshake = new ClientHandshakeMessage(
-            new ClientHandshakeStruct(
-                $clientVersion,
-                vec[
-                    new ParamStruct('user', $this->username),
-                    new ParamStruct('database', $this->database),
-                ],
-                vec[]
-            )
-        );
-
-        $this->socket->sendMessage($handshake);
-
-        $buffer = $this->socket->receive();
-        $message = $this->reader->read($buffer);
-
-        $messageType = $message->getType();
-
-        if ($messageType === 'R') {
-            invariant(
-                $message is AuthenticationMessage,
-                'Type R message should be a %s but is a %s.',
-                AuthenticationMessage::class,
-                get_class($message)
-            );
-
-            $messageContent = $message->getValue();
-    
-            invariant(
-                $messageContent is AuthenticationRequiredSASLStruct,
-                'The message should contain a %s but contains a %s.',
-                AuthenticationRequiredSASLStruct::class,
-                get_class($messageContent)
-            );
-
-            $this->handleAuthenticationRequiredSASLMessage($messageContent);
-        }
-    }
-
-    private function handleAuthenticationRequiredSASLMessage(
-        AuthenticationRequiredSASLStruct $authenticationStruct
-    ): void {
-        $methods = $authenticationStruct->getMethods();
-
-        $authenticatorFactory = new AuthenticatorFactory($this->socket, $this->reader);
-        $authenticator = $authenticatorFactory->createFromMethods($methods);
-
-        $authenticator->authenticate($this->username, $this->password);
+        $handshaker = new Handshaker($this);
+        $handshaker->handshake();
     }
 
     public function execute(string $query): void
@@ -242,7 +206,7 @@ class Client
         $result = $this->executeFlow(
             $arguments,
             $queryTypeDescription['inCodec'],
-            $queryTypeDescription['outCodec'] 
+            $queryTypeDescription['outCodec']
         );
 
         return $result;
@@ -274,7 +238,7 @@ class Client
             }
 
             $responseMessage = $this->reader->read($responseBuffer);
-            
+
             if ($responseMessage is PrepareCompleteMessage) {
                 $queryTypeDescription = $this->handlePrepareCompleteMessage($responseMessage);
             } else if ($responseMessage is ReadyForCommandMessage) {
@@ -320,7 +284,7 @@ class Client
             $this->socket->sendMessage($describeStatementMessage, new SynchMessage());
 
             $responseMessageBuffer = $this->socket->receive();
-            
+
             $queryDescriptionsType = null;
             while ($parsing) {
                 if ($responseMessageBuffer->isConsumed()) {
@@ -361,7 +325,7 @@ class Client
 
         if ($inCodec === null) {
             $inCodec = $this->codecRegistery->buildCodec($content->getInputTypeDesc());
-        }   
+        }
 
         if ($outCodec === null) {
             $outCodec = $this->codecRegistery->buildCodec($content->getOutputTypeDesc());
@@ -398,7 +362,7 @@ class Client
         $parsing = true;
 
         $responseBuffer = $this->socket->receive();
-        
+
         $result = vec[];
         $i = 0;
         while ($parsing) {
@@ -415,7 +379,7 @@ class Client
                 );
             } else if ($responseMessage is CommandCompleteMessage) {
                 $this->lastStatus = $responseMessage->getValue()->getStatus();
-            } 
+            }
             else if ($responseMessage is ReadyForCommandMessage) {
                 $this->serverTransactionStatus = $responseMessage->getValue()->getTransactionState();
                 $parsing = false;
@@ -440,7 +404,7 @@ class Client
     }
 
     private function encodeArguments(
-        dict<string, mixed> $arguments, 
+        dict<string, mixed> $arguments,
         CodecInterface $codec
     ): string {
         if ($codec is EmptyTupleCodec) {
