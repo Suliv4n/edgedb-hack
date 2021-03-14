@@ -27,7 +27,7 @@ class LocalDateCodec extends ScalarCodec
         }
 
         $interval = $value->diff($this->referenceDate);
-        
+
         $encoded = (new UInt32Type(4))->write();
         $encoded .= (new UInt32Type($interval->days))->write();
 
@@ -37,8 +37,8 @@ class LocalDateCodec extends ScalarCodec
     public function decode(Buffer $buffer): mixed
     {
         $daysFromReferenceDate = Int32Type::read($buffer)->getValue();
-        
-        $localDate = new DateTime($this->referenceDate->getTimestamp());
+
+        $localDate = new DateTime(\strval($this->referenceDate->getTimestamp()));
 
         $interval = new DateInterval(
             Str\format('P%dD', Math\abs($daysFromReferenceDate))

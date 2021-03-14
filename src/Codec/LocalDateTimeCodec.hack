@@ -48,16 +48,16 @@ class LocalDateTimeCodec extends ScalarCodec
             $microsecondsDiff = 10**6 - $microsecondsDiff;
         }
 
-        $referenceMicroTimestamp = $this->referenceDatetime->getTimestamp() * 10**6;
+        $referenceMicroTimestamp = (int) ($this->referenceDatetime->getTimestamp() * 10**6);
         $referenceMicroTimestamp += $microseconds;
-        
+
 
         $localDatetime = new DateTime();
-        $localDatetime->setTimestamp($referenceMicroTimestamp / 10**6);
+        $localDatetime->setTimestamp(Math\int_div($referenceMicroTimestamp, (int) 10**6));
         $localDatetimeString = $localDatetime->format('Y-m-d h:i:s');
 
         $localDatetime = DateTime::createFromFormat(
-            'Y-m-d h:i:s.u', 
+            'Y-m-d h:i:s.u',
             $localDatetimeString . '.' . (string) $microsecondsDiff
         );
 
